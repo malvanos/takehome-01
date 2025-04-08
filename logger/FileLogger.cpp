@@ -1,8 +1,10 @@
 // Copyright (c) 2025 Michael Alvanos Services LTD
+// All rights reserved.
 //
 // This software is provided "as is" without any express or implied
 // warranty. In no event will the authors be held liable for any damages
-// arising from the use of this software
+// arising from the use of this software.
+
 
 #include "pch.h"
 #include "FileLogger.h"
@@ -60,17 +62,17 @@ FileLogger::FileLogger()
 
 void FileLogger::log(LogLevel level, const std::string& message) {
         std::lock_guard<std::mutex> lock(mutex);
-        
+        std::string timestamp = getCurrentTimestampForLoggerChrono();
         if (logFile.is_open()) {
             switch (level) {
             case LogLevel::INFO:
-                logFile << "[INFO] " << message << std::endl;
+                logFile << timestamp << " [INFO]: " << message << std::endl;
                 break;
             case LogLevel::WARNING:
-                logFile << "[WARNING] " << message << std::endl;
+                logFile << timestamp << " [WARNING]: " << message << std::endl;
                 break;
             case LogLevel::LOGERROR:
-                logFile << "[ERROR] " << message << std::endl;
+                logFile << timestamp << " [ERROR]: " << message << std::endl;
                 break;
             }
         }
@@ -78,6 +80,7 @@ void FileLogger::log(LogLevel level, const std::string& message) {
 
 FileLogger::~FileLogger() {
     if (logFile.is_open()) {
+        logFile.flush();
         logFile.close();
     }
 }
