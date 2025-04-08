@@ -1,0 +1,1 @@
+[INFO] Logic started with data: 42

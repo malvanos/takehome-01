@@ -1,0 +1,83 @@
+// Copyright (c) 2025 Michael Alvanos Services LTD
+//
+// This software is provided "as is" without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software
+
+#include "pch.h"
+#include "FileLogger.h"
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <sstream>
+
+#ifdef _WIN32
+#include <windows.h> // For Windows
+#include <process.h>   // For _getpid() on older Windows
+#endif
+
+static unsigned long pid() {
+#ifdef _WIN32
+    DWORD pid = GetCurrentProcessId();
+#else
+    pid_t pid = getpid();
+#endif
+    return pid;
+}
+
+static std::string getCurrentTimestampForLoggerChrono() {
+    auto now = std::chrono::system_clock::now();
+    auto timepoint_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    long long milliseconds = timepoint_ms.time_since_epoch().count() % 1000;
+
+    auto dp = std::chrono::floor<std::chrono::seconds>(now);
+    std::time_t t = std::chrono::system_clock::to_time_t(dp);
+    std::tm tm_val;
+
+#ifdef _WIN32
+    localtime_s(&tm_val, &t);
+#else
+    localtime_r(&t, &tm_val);
+#endif
+
+    std::stringstream ss;
+    ss << std::put_time(&tm_val, "%H:%M:%S") << "." << std::setfill('0') << std::setw(3) << milliseconds;
+    return ss.str();
+}
+
+
+FileLogger::FileLogger()
+{
+    unsigned long processId = pid();
+    std::string logFilePathName = std::to_string(processId) + "_log.txt";
+    auto logFilePath = std::filesystem::current_path() / logFilePathName;
+    logFile = std::ofstream(logFilePath, std::ios::app);
+
+    if (!logFile.is_open()) {
+        throw std::runtime_error("Failed to open log file: " + logFilePath.string());
+    }
+}
+
+void FileLogger::log(LogLevel level, const std::string& message) {
+        std::lock_guard<std::mutex> lock(mutex);
+        
+        if (logFile.is_open()) {
+            switch (level) {
+            case LogLevel::INFO:
+                logFile << "[INFO] " << message << std::endl;
+                break;
+            case LogLevel::WARNING:
+                logFile << "[WARNING] " << message << std::endl;
+                break;
+            case LogLevel::LOGERROR:
+                logFile << "[ERROR] " << message << std::endl;
+                break;
+            }
+        }
+}
+
+FileLogger::~FileLogger() {
+    if (logFile.is_open()) {
+        logFile.close();
+    }
+}
