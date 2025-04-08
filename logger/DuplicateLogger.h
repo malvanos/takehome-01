@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-class DuplicateLogger : public Logger
+class DuplicateLogger : public Logger, std::enable_shared_from_this<DuplicateLogger>
 {
 public:
     DuplicateLogger(std::unique_ptr<Logger> logger1, std::unique_ptr<Logger> logger2)

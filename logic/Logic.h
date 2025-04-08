@@ -12,9 +12,14 @@
 
 class Logic {
     public:
-        Logic(std::unique_ptr<Logger> logger);
+        struct Dependencies {
+            std::shared_ptr<Logger> logger;
+            int waitingPeriodForDumps;
+        };
+
+        Logic(Dependencies&& dependencies);
         ~Logic();
-        void start(int data);
+        void start();
 private:
-    std::unique_ptr<Logger> logger;
+    std::shared_ptr<Logger> logger;
 };
