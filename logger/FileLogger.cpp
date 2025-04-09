@@ -13,18 +13,11 @@
 #include <chrono>
 #include <sstream>
 
-#ifdef _WIN32
-#include <windows.h> // For Windows
-#include <process.h>   // For _getpid() on older Windows
-#endif
+#include <windows.h>
+#include <process.h>
 
-static unsigned long pid() {
-#ifdef _WIN32
-    DWORD pid = GetCurrentProcessId();
-#else
-    pid_t pid = getpid();
-#endif
-    return pid;
+static unsigned long getProcessID() {
+    return GetCurrentProcessId();
 }
 
 static std::string getCurrentTimestampForLoggerChrono() {
@@ -36,11 +29,7 @@ static std::string getCurrentTimestampForLoggerChrono() {
     std::time_t t = std::chrono::system_clock::to_time_t(dp);
     std::tm tm_val;
 
-#ifdef _WIN32
     localtime_s(&tm_val, &t);
-#else
-    localtime_r(&t, &tm_val);
-#endif
 
     std::stringstream ss;
     ss << std::put_time(&tm_val, "%H:%M:%S") << "." << std::setfill('0') << std::setw(3) << milliseconds;
@@ -50,7 +39,7 @@ static std::string getCurrentTimestampForLoggerChrono() {
 
 FileLogger::FileLogger()
 {
-    unsigned long processId = pid();
+    unsigned long processId = getProcessID();
     std::string logFilePathName = std::to_string(processId) + "_log.txt";
     auto logFilePath = std::filesystem::current_path() / logFilePathName;
     logFile = std::ofstream(logFilePath, std::ios::app);

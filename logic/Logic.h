@@ -34,6 +34,7 @@ private:
     void take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback);
     void start_snapshot_timer();
 
+
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkProvider> server;
     int waitingPeriodForDumps;

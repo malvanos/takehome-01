@@ -8,6 +8,7 @@
 #include "../include/NetworkProvider.h"
 
 #include <functional>
+#include <set>
 
 class NetworkServer : 
     public NetworkProvider,
@@ -25,11 +26,18 @@ public:
     void stop() override;
     void send(const std::vector<char>& message, std::function<void>&& callback) override;
 
+    void register_session(std::shared_ptr<Session> session);
+    void unregister_session(std::shared_ptr<Session> session);
+
 private:
     //void sendDataNetwork(const std::vector<char>& message, std::function<void>& callback);
+    void startAccepting();
+    void stopAccepting();
+    void closeSessions();
 
     boost::asio::ip::tcp::acceptor acceptor;
-    boost::asio::ip::tcp::socket socket;
     std::shared_ptr<Logger> logger;
     boost::asio::io_context& io_context;
+
+    std::set<std::shared_ptr<Session>> sessions;
 };

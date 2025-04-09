@@ -7,11 +7,10 @@
 
 #include "pch.h"
 #include "NetworkServer.h"
-
+#include "Session.h"
 
 NetworkServer::NetworkServer(Dependencies&& deps)
-    : acceptor(deps.ioContext)
-    , socket(deps.ioContext)
+    : acceptor(deps.ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 12345))
     , logger(deps.logger)
     , io_context(deps.ioContext)
 {
@@ -19,21 +18,69 @@ NetworkServer::NetworkServer(Dependencies&& deps)
 
 NetworkServer::~NetworkServer()
 {
+    stop();
 }
 
 void NetworkServer::start()
 {
+    auto self(shared_from_this());
+    boost::asio::post(io_context, [this,self]() {
+        startAccepting();
+    });
+}
+
+void NetworkServer::startAccepting() {
     logger->log(Logger::LogLevel::INFO, "NetworkServer started");
-    // Start the server logic here
+
+    auto self(shared_from_this());
+    acceptor.async_accept(
+        [this,self](boost::system::error_code ec, boost::asio::ip::tcp::socket socket)
+        {
+            if (ec)
+            {
+                logger->log(Logger::LogLevel::LOGERROR, "Error accepting connection: " + ec.message());
+                return;
+            }
+
+            auto session = std::make_shared<Session>(std::move(socket), logger, self);
+            register_session(session);
+            session->start();
+            startAccepting();
+        });
 }
 
 void NetworkServer::stop()
 {
-    // Stop the server logic here
+    auto self(shared_from_this());
+    boost::asio::post(io_context, [this, self]() {
+        stopAccepting();
+        closeSessions();
+    });
 }
 
+void NetworkServer::closeSessions() {
+    // Close all connections here
+}
+
+void NetworkServer::stopAccepting() {
+    // Note: this is blocking, for simplicity
+    try {
+        acceptor.close();
+    } catch (const std::exception& e) {
+        // Ensure that we continue the execution
+        logger->log(Logger::LogLevel::LOGERROR, "Error closing acceptor: " + std::string(e.what()));
+    }
+}
+
+void NetworkServer::register_session(std::shared_ptr<Session> session) {
+    sessions.insert(session);
+}
+
+void NetworkServer::unregister_session(std::shared_ptr<Session> session) {
+    sessions.erase(session);
+}
 
 void NetworkServer::send(const std::vector<char>& message, std::function<void>&& callback) {
-        
+    // Send where? We need to identify which session asked what
 }
 
