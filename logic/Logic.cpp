@@ -7,9 +7,17 @@
 
 #include "pch.h"
 #include "Logic.h"
+#include <chrono>
+#include <functional>
+#include "boost/asio.hpp"
+#include "boost/asio/error.hpp"
+#include "boost/system/error_code.hpp"
+#include "boost/system/detail/error_category.hpp"
 
 Logic::Logic(Dependencies&& dependencies)
     : logger(std::move(dependencies.logger))
+    , waitingPeriodForDumps(dependencies.waitingPeriodForDumps)
+    , timer(dependencies.io_context)
 {
 }
 
@@ -17,7 +25,64 @@ Logic::~Logic()
 {
 }
 
-void Logic::start()
+void Logic::start(std::shared_ptr<NetworkProvider> server)
 {
+    this->server = server;
     logger->log(Logger::LogLevel::INFO, "Logic started");
+    start_snapshot_timer();
+}
+
+void Logic::onMessage(const std::vector<char>& message)
+{
+    logger->log(Logger::LogLevel::INFO, "Received message");
+    // Process the message here
+    // For example, you can parse the message and store it in number_container
+}
+void Logic::onNetworkStop()
+{
+    logger->log(Logger::LogLevel::INFO, "Logic stopped");
+    // Handle stop logic here
+}
+
+void Logic::onClientConnected()
+{
+    logger->log(Logger::LogLevel::INFO, "Client connected");
+    // Handle client connection here
+}
+
+void Logic::stop()
+{
+    logger->log(Logger::LogLevel::INFO, "Logic stopped");
+    timer.cancel();
+}
+
+void Logic::start_snapshot_timer() {
+    logger->log(Logger::LogLevel::INFO, "Snapshot timer started");
+    take_snapshot_after(std::chrono::seconds(waitingPeriodForDumps), [this]() {
+        logger->log(Logger::LogLevel::INFO, "Taking snapshot...");
+        start_snapshot_timer();
+    });
+}
+
+void Logic::take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback) {
+    if (periodSeconds <= std::chrono::seconds(0)) {
+        callback();
+        return;
+    }
+
+    timer.expires_after(periodSeconds);
+    timer.async_wait(
+        [this, callback](const boost::system::error_code& ec) {
+            if (!ec) {
+                logger->log(Logger::LogLevel::WARNING,"Snapshot timer expired, taking snapshot.");
+                callback();
+            }
+            else if (ec == boost::asio::error::operation_aborted) {
+                logger->log(Logger::LogLevel::WARNING, "Snapshot timer was aborted.");
+            }
+            else {
+                logger->log(Logger::LogLevel::LOGERROR, "Snapshot timer error.");
+            }
+        });
+
 }

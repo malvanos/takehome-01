@@ -16,6 +16,12 @@
 #include <string>
 
 #include <boost/asio.hpp>
+#include <thread>
+
+
+static void runAsioContext(boost::asio::io_context& ctx) {
+    ctx.run();
+}
 
 int main(int argc, char *argv[])
 {
@@ -24,24 +30,32 @@ int main(int argc, char *argv[])
     auto fileLogger = std::make_unique<FileLogger>();
     auto duplicateLogger = std::make_shared<DuplicateLogger>(std::move(constoleLogger), std::move(fileLogger));
 
+    boost::asio::io_context logicContext;
+
     Logic::Dependencies deps{
         .logger = duplicateLogger,
-        .waitingPeriodForDumps = 10
+        .waitingPeriodForDumps = 10,
+        .io_context = logicContext
     };
 
     auto logic = std::make_unique<Logic>(std::move(deps));
         
-    boost::asio::io_context io_context;
+    boost::asio::io_context networkContext;
 
     NetworkServer::Dependencies networkServerDeps{
-        .io_context = io_context,
+        .ioContext = networkContext,
         .logger = duplicateLogger
     };
 
-    NetworkServer server(std::move(networkServerDeps));
-    server.start();
+    auto server = std::make_shared<NetworkServer>(std::move(networkServerDeps));
 
-    io_context.run();
+    logic->start(server);
+
+    std::thread thread1(runAsioContext, std::ref(networkContext));
+    std::thread thread2(runAsioContext, std::ref(logicContext));
+
+    thread1.join();
+    thread2.join();
 
 }
 
