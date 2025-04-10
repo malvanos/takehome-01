@@ -10,6 +10,8 @@
 #include <functional>
 #include <set>
 
+class Session;
+
 class NetworkServer : 
     public NetworkProvider,
     public std::enable_shared_from_this<NetworkServer>
@@ -24,7 +26,7 @@ public:
     ~NetworkServer() override;
     void start() override;
     void stop() override;
-    void send(const std::vector<char>& message, std::function<void>&& callback) override;
+    void send(uint64_t sumOfSquares) override;
 
     void register_session(std::shared_ptr<Session> session);
     void unregister_session(std::shared_ptr<Session> session);

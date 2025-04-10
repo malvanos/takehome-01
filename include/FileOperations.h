@@ -7,14 +7,10 @@
 
 #pragma once
 
-#include <vector>
-#include <functional>
+#include <unordered_set>
 
-class NetworkProvider
-{
+class FileOperations {
 public:
-    virtual ~NetworkProvider() = default;
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void send(uint64_t sumOfSquares) = 0;
+    virtual void writeFile(const std::unordered_set<unsigned short>& numbers) = 0;
+    virtual void stop();
 };

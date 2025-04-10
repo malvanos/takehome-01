@@ -10,11 +10,13 @@
 
 #include <vector>
 
+class NetworkProvider;
+
 class NetworkObserver
 {   
 public:
     virtual ~NetworkObserver() = default;
-    virtual void onClientConnected() = 0;
     virtual void onNetworkStop() = 0;
-    virtual void onMessage(const std::vector<char>& message) = 0;
+    virtual void onNewNumber(int number) = 0;
+    virtual void onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAsked) = 0;
 };

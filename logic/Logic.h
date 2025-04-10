@@ -15,7 +15,7 @@
 #include "../include/NetworkProvider.h"
 #include "../include/NetworkObserver.h"
 
-class Logic : public NetworkObserver {
+class Logic : public NetworkObserver, std::enable_shared_from_this<Logic> {
     public:
         struct Dependencies {
             std::shared_ptr<Logger> logger;
@@ -26,19 +26,19 @@ class Logic : public NetworkObserver {
         Logic(Dependencies&& dependencies);
         ~Logic();
         void start(std::shared_ptr<NetworkProvider> server);
-        void onMessage(const std::vector<char>& message) override;
-        void onClientConnected() override;
+        void onNewNumber(int number) override;
+        void onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAsked) override;        
         void onNetworkStop() override;
         void stop();
 private:
     void take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback);
     void start_snapshot_timer();
 
-
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkProvider> server;
     int waitingPeriodForDumps;
     boost::asio::steady_timer timer;
 
-    std::unordered_set<unsigned short> number_container;
+    std::unordered_set<unsigned short> numbersContainer;
+    boost::asio::io_context& ioContext;
 };

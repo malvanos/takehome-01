@@ -18,6 +18,7 @@ Logic::Logic(Dependencies&& dependencies)
     : logger(std::move(dependencies.logger))
     , waitingPeriodForDumps(dependencies.waitingPeriodForDumps)
     , timer(dependencies.io_context)
+    , ioContext(dependencies.io_context)
 {
 }
 
@@ -32,23 +33,34 @@ void Logic::start(std::shared_ptr<NetworkProvider> server)
     start_snapshot_timer();
 }
 
-void Logic::onMessage(const std::vector<char>& message)
-{
-    logger->log(Logger::LogLevel::INFO, "Received message");
-    // Process the message here
-    // For example, you can parse the message and store it in number_container
+void Logic::onNewNumber(int number) {
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self, number]() {
+        numbersContainer.insert(number);
+        }
+    );
 }
+
+void Logic::onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAsked) {
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self, number, whoAsked=std::move(whoAsked)]() {
+            double sum_of_squares = std::pow(number, 2);
+
+            for (int num : numbersContainer) {
+                sum_of_squares += std::pow(num, 2);
+            }
+
+            whoAsked->send(sum_of_squares);
+        }
+    );
+}
+
 void Logic::onNetworkStop()
 {
     logger->log(Logger::LogLevel::INFO, "Logic stopped");
     // Handle stop logic here
 }
 
-void Logic::onClientConnected()
-{
-    logger->log(Logger::LogLevel::INFO, "Client connected");
-    // Handle client connection here
-}
 
 void Logic::stop()
 {

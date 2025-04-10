@@ -26,5 +26,5 @@ private:
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkServer> serverAcceptor;
 
-    char data[16];
+    char data[16] = { 0 };
 };
