@@ -26,7 +26,6 @@ public:
     ~NetworkServer() override;
     void start() override;
     void stop() override;
-    void send(uint64_t sumOfSquares) override;
 
     void register_session(std::shared_ptr<Session> session);
     void unregister_session(std::shared_ptr<Session> session);

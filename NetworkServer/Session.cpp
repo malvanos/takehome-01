@@ -40,7 +40,7 @@ void Session::start()
 
 void Session::read() {
     socket.async_receive(
-        boost::asio::buffer(data,16),
+        boost::asio::buffer(receiveData,16),
         [this](boost::system::error_code ec, std::size_t length)
         {
             if (ec) {
@@ -75,18 +75,39 @@ void Session::close() {
     }
 }
 
-void Session::send(const std::vector<char>& message, std::function<void(void)>&& callback)
+
+bool Session::shouldTransmit() {
+    if (dataToSend.size() == 0 and !transmitting) {
+        return true;
+    }
+    return false;
+}
+
+void Session::send(uint64_t sumOfSquares)
 {
-    // TODO: add queue for sending messages
+    if (shouldTransmit()) {
+        write(sumOfSquares);
+    } else {
+        dataToSend.push_back(sumOfSquares);
+    }
+}
+
+void Session::write(uint64_t sumOfSquares) {
     auto self(shared_from_this());
-    boost::asio::async_write(socket, boost::asio::buffer(message),
-        [this, self, callback = std::move(callback)](boost::system::error_code ec, std::size_t /*length*/)
+
+    fillPacket(
+        transmitingPacket,
+        PacketType::SUM_OF_SQUARES_ANSWER, 
+        sumOfSquares
+    );
+
+    boost::asio::async_write(socket, boost::asio::buffer(&transmitingPacket, sizeof(transmitingPacket)),
+        [this, self](boost::system::error_code ec, std::size_t /*length*/)
         {
             if (ec)
             {
                 logger->log(Logger::LogLevel::LOGERROR, "Error sending message: " + ec.message());
                 return;
             }
-            callback();
         });
 }

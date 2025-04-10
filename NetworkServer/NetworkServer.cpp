@@ -80,7 +80,4 @@ void NetworkServer::unregister_session(std::shared_ptr<Session> session) {
     sessions.erase(session);
 }
 
-void NetworkServer::send(uint64_t sumOfSquares) {
-    // Send where? We need to identify which session asked what
-}
 

@@ -57,7 +57,7 @@ void Logic::onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAske
 
 void Logic::onNetworkStop()
 {
-    logger->log(Logger::LogLevel::INFO, "Logic stopped");
+    logger->log(Logger::LogLevel::INFO, "Network stopped");
     // Handle stop logic here
 }
 

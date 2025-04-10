@@ -16,5 +16,4 @@ public:
     virtual ~NetworkProvider() = default;
     virtual void start() = 0;
     virtual void stop() = 0;
-    virtual void send(uint64_t sumOfSquares) = 0;
 };
