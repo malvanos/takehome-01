@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include "FileOperations.h"
+#include "../include/FileOperations.h"
 #include <fstream>
 #include <boost/asio.hpp>
 #include <memory>
-#include "Logger.h"
+#include "../include/Logger.h"
 
 class SystemFileOperations : public FileOperations {
 public:
@@ -21,10 +21,10 @@ public:
     };
 
     SystemFileOperations(Dependencies&& deps);
-    void writeFile(const std::unordered_set<unsigned short>& numbers) override;
+    void writeFile(const std::unordered_set<uint64_t>& numbers) override;
     void stop() override;
 private:
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> workGuard;
-
+    std::shared_ptr<Logger> logger;
 };
 

@@ -13,6 +13,7 @@
 
 SystemFileOperations::SystemFileOperations(Dependencies&& deps)
     : workGuard(deps.ioContext.get_executor())
+    , logger(deps.logger)
 {
 
 }
@@ -21,7 +22,8 @@ void SystemFileOperations::stop() {
     workGuard.reset();
 }
 
-void SystemFileOperations::writeFile(const std::unordered_set<unsigned short>& numbers){
+void SystemFileOperations::writeFile(const std::unordered_set<uint64_t>& numbers){
+    logger->info("Writing file binary_data.dat");
     std::ofstream outputFile("binary_data.dat", std::ios::binary);
 
     if (outputFile.is_open()) {
@@ -30,7 +32,7 @@ void SystemFileOperations::writeFile(const std::unordered_set<unsigned short>& n
         outputFile.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
         // The actual numbers
-        for (unsigned short num : numbers) {
+        for (uint64_t num : numbers) {
             outputFile.write(reinterpret_cast<const char*>(&num), sizeof(num));
         }
 

@@ -11,6 +11,6 @@
 
 class FileOperations {
 public:
-    virtual void writeFile(const std::unordered_set<unsigned short>& numbers) = 0;
+    virtual void writeFile(const std::unordered_set<uint64_t>& numbers) = 0;
     virtual void stop() = 0;
 };

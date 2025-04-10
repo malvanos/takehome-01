@@ -19,6 +19,8 @@ Logic::Logic(Dependencies&& dependencies)
     , waitingPeriodForDumps(dependencies.waitingPeriodForDumps)
     , timer(dependencies.io_context)
     , ioContext(dependencies.io_context)
+    , server(std::move(dependencies.server))
+    , fileOperations(std::move(dependencies.fileOperations))
 {
 }
 
@@ -26,9 +28,8 @@ Logic::~Logic()
 {
 }
 
-void Logic::start(std::shared_ptr<NetworkProvider> server)
+void Logic::start()
 {
-    this->server = server;
     logger->log(Logger::LogLevel::INFO, "Logic started");
     start_snapshot_timer();
     server->start(shared_from_this());
@@ -67,11 +68,14 @@ void Logic::stop()
 {
     logger->log(Logger::LogLevel::INFO, "Logic stopped");
     timer.cancel();
+    fileOperations->stop();
+    server->stop();
 }
 
 void Logic::start_snapshot_timer() {
     logger->log(Logger::LogLevel::INFO, "Snapshot timer started");
-    take_snapshot_after(std::chrono::seconds(waitingPeriodForDumps), [this]() {
+    auto self(shared_from_this());
+    take_snapshot_after(std::chrono::seconds(waitingPeriodForDumps), [this, self]() {
         logger->log(Logger::LogLevel::INFO, "Taking snapshot...");
         start_snapshot_timer();
     });
@@ -96,6 +100,7 @@ void Logic::take_snapshot_after(std::chrono::seconds periodSeconds, std::functio
             else {
                 logger->log(Logger::LogLevel::LOGERROR, "Snapshot timer error.");
             }
+            fileOperations->writeFile(numbersContainer);
         });
 
 }

@@ -42,7 +42,7 @@ void NetworkServer::startAccepting() {
                 logger->log(Logger::LogLevel::LOGERROR, "Error accepting connection: " + ec.message());
                 return;
             }
-
+            socket.set_option(forceKeepAliveOption);
             Session::Depedencies deps = {
                 .socket = std::move(socket),
                 .logger = logger, 

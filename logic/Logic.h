@@ -15,18 +15,21 @@
 #include "../include/NetworkProvider.h"
 #include "../include/NetworkObserver.h"
 #include "../include/NumbersClient.h"
+#include "../include/FileOperations.h"
 
-class Logic : public NetworkObserver, std::enable_shared_from_this<Logic> {
+class Logic : public NetworkObserver, public std::enable_shared_from_this<Logic> {
     public:
         struct Dependencies {
             std::shared_ptr<Logger> logger;
             int waitingPeriodForDumps;
             boost::asio::io_context& io_context;
+            std::shared_ptr<NetworkProvider> server;
+            std::unique_ptr<FileOperations> fileOperations;
         };
 
         Logic(Dependencies&& dependencies);
         ~Logic();
-        void start(std::shared_ptr<NetworkProvider> server);
+        void start();
         void onNewNumber(uint64_t number) override;
         void onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) override;
         void onNetworkStop() override;
@@ -42,4 +45,5 @@ private:
 
     std::unordered_set<uint64_t> numbersContainer;
     boost::asio::io_context& ioContext;
+    std::shared_ptr<FileOperations> fileOperations;
 };

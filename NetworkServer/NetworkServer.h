@@ -43,4 +43,6 @@ private:
 
     std::set<std::shared_ptr<Session>> sessions;
     std::shared_ptr<NetworkObserver> observer;
+    boost::asio::socket_base::keep_alive forceKeepAliveOption =
+        boost::asio::socket_base::keep_alive(true);
 };
