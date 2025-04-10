@@ -11,6 +11,7 @@
 #include <set>
 
 class Session;
+class NetworkObserver;
 
 class NetworkServer : 
     public NetworkProvider,
@@ -24,7 +25,7 @@ public:
 
     NetworkServer(Dependencies&& deps);
     ~NetworkServer() override;
-    void start() override;
+    void start(std::shared_ptr<NetworkObserver> observer) override;
     void stop() override;
 
     void register_session(std::shared_ptr<Session> session);
@@ -41,4 +42,5 @@ private:
     boost::asio::io_context& io_context;
 
     std::set<std::shared_ptr<Session>> sessions;
+    std::shared_ptr<NetworkObserver> observer;
 };

@@ -31,9 +31,10 @@ void Logic::start(std::shared_ptr<NetworkProvider> server)
     this->server = server;
     logger->log(Logger::LogLevel::INFO, "Logic started");
     start_snapshot_timer();
+    server->start(shared_from_this());
 }
 
-void Logic::onNewNumber(int number) {
+void Logic::onNewNumber(uint64_t number) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number]() {
         numbersContainer.insert(number);
@@ -41,16 +42,16 @@ void Logic::onNewNumber(int number) {
     );
 }
 
-void Logic::onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAsked) {
+void Logic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number, whoAsked=std::move(whoAsked)]() {
-            double sum_of_squares = std::pow(number, 2);
+            uint64_t sumOfSquares = number * number;
 
-            for (int num : numbersContainer) {
-                sum_of_squares += std::pow(num, 2);
+            for (uint64_t num : numbersContainer) {
+                sumOfSquares += num * num;
             }
 
-            whoAsked->send(sum_of_squares);
+            whoAsked->send(sumOfSquares);
         }
     );
 }

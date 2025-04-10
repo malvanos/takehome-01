@@ -18,13 +18,14 @@
 #include <utility>
 #include <stdexcept>
 
-Session::Session(
-    boost::asio::ip::tcp::socket socket,
-    std::shared_ptr<Logger> logger, 
-    std::shared_ptr<NetworkServer> server)
-    : socket(std::move(socket))
-    , logger(std::move(logger))
-    , serverAcceptor(std::move(server))
+#include "../include/NetworkObserver.h"
+
+Session::Session(Depedencies deps)
+    : socket(std::move(deps.socket))
+    , logger(std::move(deps.logger))
+    , serverAcceptor(std::move(deps.server))
+    , observer(std::move(deps.observer))
+    , io_context(deps.io_context)
 {
 }
 
@@ -35,28 +36,65 @@ Session::~Session()
 
 void Session::start()
 {
-    read();
+    auto self(shared_from_this());
+    boost::asio::post(io_context, [this, self]() {
+        read();
+        if (shouldTransmit()) {
+            auto sumOfSquares = dataToSend.front();
+            dataToSend.pop_front();
+            write(sumOfSquares);
+        }
+    });
+
 }
 
 void Session::read() {
+    auto self(shared_from_this());
     socket.async_receive(
-        boost::asio::buffer(receiveData,16),
-        [this](boost::system::error_code ec, std::size_t length)
+        boost::asio::buffer(&receivePacketData,sizeof(receivePacketData)),
+        [this,self](boost::system::error_code ec, std::size_t length)
         {
+            if (forceShutdown) {
+                return;
+            }
+
             if (ec) {
                 logger->log(Logger::LogLevel::LOGERROR, "Error receiving message: " + ec.message());
                 return;
             }
-            // Process the received message
-            // TODO: add process here
-
-
+            
+            if (!validatePacket(receivePacketData)) {
+                logger->log(Logger::LogLevel::LOGERROR, "Invalid hash check.");
+                close();
+            }
+            
+            switch (receivePacketData.packetType) {
+            case  PacketType::DATA_ADD:
+                observer->onNewNumber(receivePacketData.data);
+                break;
+            case  PacketType::SUM_OF_SQUARES_REQUEST:
+                observer->onAverageSquare(receivePacketData.data,self);
+                break;
+            case  PacketType::INVALID:
+            default:
+                logger->log(Logger::LogLevel::LOGERROR, "Invalid packet type.");
+                close();
+                return;
+            }
 
             read();
         });
 }
 
 void Session::close() {
+    auto self(shared_from_this());
+    boost::asio::post(io_context, [this, self]() {
+        forceShutdown = true;
+        closeConnection();
+    });
+}
+
+void Session::closeConnection() {
     try {
         // TODO: shutdown can wait for ever for tcp to close
         boost::system::error_code ec;
@@ -70,14 +108,14 @@ void Session::close() {
         {
             logger->log(Logger::LogLevel::LOGERROR, "Error closing socket: " + ec.message());
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         logger->log(Logger::LogLevel::LOGERROR, "Exception while closing socket: " + std::string(e.what()));
     }
 }
 
-
 bool Session::shouldTransmit() {
-    if (dataToSend.size() == 0 and !transmitting) {
+    if (dataToSend.size() > 0 and !transmitting) {
         return true;
     }
     return false;
@@ -100,14 +138,27 @@ void Session::write(uint64_t sumOfSquares) {
         PacketType::SUM_OF_SQUARES_ANSWER, 
         sumOfSquares
     );
+    
+    transmitting = true;
 
     boost::asio::async_write(socket, boost::asio::buffer(&transmitingPacket, sizeof(transmitingPacket)),
         [this, self](boost::system::error_code ec, std::size_t /*length*/)
         {
+            transmitting = false;
+            if (forceShutdown) {
+                return;
+            }
             if (ec)
             {
                 logger->log(Logger::LogLevel::LOGERROR, "Error sending message: " + ec.message());
                 return;
             }
+
+            if (shouldTransmit()) {
+                auto sumOfSquares = dataToSend.front();
+                dataToSend.pop_front();
+                write(sumOfSquares);
+            }
+
         });
 }

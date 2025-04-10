@@ -14,6 +14,7 @@
 #include "boost/asio/io_context.hpp"
 #include "../include/NetworkProvider.h"
 #include "../include/NetworkObserver.h"
+#include "../include/NumbersClient.h"
 
 class Logic : public NetworkObserver, std::enable_shared_from_this<Logic> {
     public:
@@ -26,8 +27,8 @@ class Logic : public NetworkObserver, std::enable_shared_from_this<Logic> {
         Logic(Dependencies&& dependencies);
         ~Logic();
         void start(std::shared_ptr<NetworkProvider> server);
-        void onNewNumber(int number) override;
-        void onAverageSquare(int number, std::shared_ptr<NetworkProvider> whoAsked) override;        
+        void onNewNumber(uint64_t number) override;
+        void onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) override;
         void onNetworkStop() override;
         void stop();
 private:
@@ -39,6 +40,6 @@ private:
     int waitingPeriodForDumps;
     boost::asio::steady_timer timer;
 
-    std::unordered_set<unsigned short> numbersContainer;
+    std::unordered_set<uint64_t> numbersContainer;
     boost::asio::io_context& ioContext;
 };

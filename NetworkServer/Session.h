@@ -14,33 +14,46 @@
 #include <deque>
 
 #include "../include/Logger.h"
+#include "../include/NumbersClient.h"
 
 #include "Protocol.h"
 
 class NetworkServer;
+class NetworkObserver;
 
-class Session : public std::enable_shared_from_this<Session> {
+class Session :
+    public NumbersClient,
+    public std::enable_shared_from_this<Session> {
 public:
-    Session(
-        boost::asio::ip::tcp::socket socket, 
-        std::shared_ptr<Logger> logger,
-        std::shared_ptr<NetworkServer> server
-    );
+
+    struct Depedencies {
+        boost::asio::ip::tcp::socket socket;
+        std::shared_ptr<Logger> logger;
+        std::shared_ptr<NetworkServer> server;
+        std::shared_ptr<NetworkObserver> observer;
+        boost::asio::io_context& io_context;
+    };
+
+    Session(Depedencies deps);
     ~Session();
     void start();
     void close();
-    void send(uint64_t sumOfSquares);
+    void send(uint64_t sumOfSquares) override;
 private:
     void read();
     void write(uint64_t sumOfSquares);
     bool shouldTransmit();
+    void closeConnection();
     boost::asio::ip::tcp::socket socket;
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkServer> serverAcceptor;
 
-    char receiveData[sizeof(NetworkPacket)] = {0};
+    NetworkPacket receivePacketData;
 
     std::deque<uint64_t> dataToSend;
     bool transmitting = false;
     NetworkPacket transmitingPacket;
+    std::shared_ptr<NetworkObserver> observer;
+    boost::asio::io_context& io_context;
+    bool forceShutdown = false;
 };

@@ -7,14 +7,7 @@
 
 #pragma once
 
-#include <memory>
-
-class NetworkObserver;
-
-class NetworkProvider
-{
+class NumbersClient{
 public:
-    virtual ~NetworkProvider() = default;
-    virtual void start(std::shared_ptr<NetworkObserver> observer) = 0;
-    virtual void stop() = 0;
+    virtual void send(uint64_t sumOfSquares) = 0;
 };

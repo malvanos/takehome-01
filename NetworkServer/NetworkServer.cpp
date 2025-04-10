@@ -21,10 +21,11 @@ NetworkServer::~NetworkServer()
     stop();
 }
 
-void NetworkServer::start()
+void NetworkServer::start(std::shared_ptr<NetworkObserver> observer)
 {
     auto self(shared_from_this());
-    boost::asio::post(io_context, [this,self]() {
+    boost::asio::post(io_context, [this,self, observer=std::move(observer)]() {
+        this->observer = observer;
         startAccepting();
     });
 }
@@ -42,7 +43,14 @@ void NetworkServer::startAccepting() {
                 return;
             }
 
-            auto session = std::make_shared<Session>(std::move(socket), logger, self);
+            Session::Depedencies deps = {
+                .socket = std::move(socket),
+                .logger = logger, 
+                .server = self,
+                .observer = observer,
+                .io_context = io_context
+            };
+            auto session = std::make_shared<Session>(std::move(deps));
             register_session(session);
             session->start();
             startAccepting();

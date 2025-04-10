@@ -20,7 +20,7 @@ enum class PacketType : uint32_t {
 
 struct NetworkPacket
 {
-    uint32_t packetType;
+    PacketType packetType;
     uint64_t data;
     uint32_t hashCheck;
 };
@@ -29,7 +29,7 @@ static uint32_t packetHashCalculator(const NetworkPacket& packet)
 {
     // Random hash function found on the net. TODO: Need a proper CRC method.
     uint32_t hash = 0;
-    hash ^= packet.packetType;
+    hash ^= static_cast<uint32_t>(packet.packetType);
     hash = (hash * 16777619U);// 16777619U is a large prime
     hash ^= packet.data;
     hash = (hash * 16777619U);
@@ -44,7 +44,7 @@ static bool validatePacket(const NetworkPacket& packet)
 
 static NetworkPacket createPacket(PacketType packetType, uint64_t data) {
     NetworkPacket packet = {
-        .packetType = static_cast<uint32_t>(packetType),
+        .packetType = packetType,
         .data = data
     };
     packet.hashCheck = packetHashCalculator(packet);
@@ -52,7 +52,7 @@ static NetworkPacket createPacket(PacketType packetType, uint64_t data) {
 }
 
 static void fillPacket(NetworkPacket& packet, PacketType packetType, uint64_t data) {
-    packet.packetType = static_cast<uint32_t>(packetType);
+    packet.packetType = packetType;
     packet.data = data;
     packet.hashCheck = packetHashCalculator(packet);
 }
