@@ -26,6 +26,8 @@ void SystemFileOperations::stop() {
 
 void SystemFileOperations::writeFile(const std::unordered_set<uint64_t>& numbers){
     logger->info("Writing file binary_data.dat");
+
+    std::lock_guard<std::mutex> lock(mutex);
     std::ofstream outputFile("binary_data.dat", std::ios::binary);
 
     if (outputFile.is_open()) {

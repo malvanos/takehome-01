@@ -30,5 +30,6 @@ public:
 private:
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> workGuard;
     std::shared_ptr<Logger> logger;
+    std::mutex mutex;
 };
 
