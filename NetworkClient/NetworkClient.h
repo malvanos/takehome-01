@@ -38,7 +38,6 @@ private:
     void write();
     void requestSumSquares(uint64_t number);
     void closeConnection();
-    bool shouldTransmit();
 
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkClientObserver> observer;

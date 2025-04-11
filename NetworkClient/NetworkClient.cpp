@@ -53,8 +53,11 @@ void NetworkClient::connect()
                             isConnected = true;
                             read();
                         }
+                        else {
+                            logger->log(Logger::LogLevel::LOGERROR, "Error connecting to server: " + ec.message());
+                            isConnected = false;
+                        }
                     });
-                logger->log(Logger::LogLevel::INFO, "Failed to connected to server");
             }
             else {
                 logger->log(Logger::LogLevel::LOGERROR, "Error resolving address: " + ec.message());
@@ -98,13 +101,6 @@ void NetworkClient::read()
         });
 }
 
-bool NetworkClient::shouldTransmit() {
-    if (dataToSend.size() > 0 and !transmitting) {
-        return true;
-    }
-    return false;
-}
-
 void NetworkClient::sendRandomNumber(uint64_t number)
 {
     auto self(shared_from_this());
@@ -127,7 +123,7 @@ void NetworkClient::enqueueOrTransmit(uint64_t number, PacketType type)
         return;
     }
     if (isConnected) {
-        if (shouldTransmit()) {
+        if (!transmitting) {
             transmitingPacket = createPacket(type, number);
             write();
         }
@@ -148,7 +144,6 @@ void NetworkClient::write()
     boost::asio::async_write(socket, boost::asio::buffer(&transmitingPacket, sizeof(transmitingPacket)),
         [this, self](boost::system::error_code ec, std::size_t /*length*/)
         {
-            logger->log(Logger::LogLevel::INFO, "Sent packet: " + std::to_string(transmitingPacket.data));
             transmitting = false;
             if (forceShutdown) {
                 return;
@@ -161,7 +156,7 @@ void NetworkClient::write()
                 return;
             }
 
-            if (shouldTransmit()) {
+            if (!dataToSend.empty()) {
                 transmitingPacket = dataToSend.front();
                 dataToSend.pop_front();
                 write();

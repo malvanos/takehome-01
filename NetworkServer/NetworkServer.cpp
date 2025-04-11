@@ -32,8 +32,6 @@ void NetworkServer::start(std::shared_ptr<NetworkObserver> observer)
 }
 
 void NetworkServer::startAccepting() {
-    
-
     auto self(shared_from_this());
     acceptor.async_accept(
         [this,self](boost::system::error_code ec, boost::asio::ip::tcp::socket socket)

@@ -19,6 +19,7 @@
 #include <stdexcept>
 
 #include "../include/NetworkObserver.h"
+#include "NetworkServer.h"
 
 Session::Session(Depedencies deps)
     : socket(std::move(deps.socket))
@@ -39,13 +40,12 @@ void Session::start()
     auto self(shared_from_this());
     boost::asio::post(io_context, [this, self]() {
         read();
-        if (shouldTransmit()) {
+        if (!dataToSend.empty()) {
             auto sumOfSquares = dataToSend.front();
             dataToSend.pop_front();
             write(sumOfSquares);
         }
     });
-
 }
 
 void Session::read() {
@@ -60,14 +60,15 @@ void Session::read() {
 
             if (ec) {
                 logger->log(Logger::LogLevel::LOGERROR, "Error receiving message: " + ec.message());
+                closeConnection();
                 return;
             }
             
             if (!validatePacket(receivePacketData)) {
                 logger->log(Logger::LogLevel::LOGERROR, "Invalid hash check.");
-                close();
+                closeConnection();
             }
-            logger->log(Logger::LogLevel::INFO, "Received packet type: " + std::to_string(static_cast<uint32_t>(receivePacketData.packetType)));
+
             switch (receivePacketData.packetType) {
             case  PacketType::DATA_ADD:
                 observer->onNewNumber(receivePacketData.data);
@@ -78,10 +79,9 @@ void Session::read() {
             case  PacketType::INVALID:
             default:
                 logger->log(Logger::LogLevel::LOGERROR, "Invalid packet type.");
-                close();
+                closeConnection();
                 return;
             }
-
             read();
         });
 }
@@ -95,30 +95,20 @@ void Session::close() {
 }
 
 void Session::closeConnection() {
-    try {
-        // TODO: shutdown can wait for ever for tcp to close
-        boost::system::error_code ec;
-        socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-        if (ec)
-        {
-            logger->log(Logger::LogLevel::LOGERROR, "Error shutting down socket: " + ec.message());
-        }
-        socket.close(ec);
-        if (ec)
-        {
-            logger->log(Logger::LogLevel::LOGERROR, "Error closing socket: " + ec.message());
-        }
-    }
-    catch (const std::exception& e) {
-        logger->log(Logger::LogLevel::LOGERROR, "Exception while closing socket: " + std::string(e.what()));
-    }
-}
 
-bool Session::shouldTransmit() {
-    if (dataToSend.size() > 0 and !transmitting) {
-        return true;
+    // TODO: shutdown can wait for ever for tcp to close
+    boost::system::error_code ec;
+    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+    if (ec)
+    {
+        logger->log(Logger::LogLevel::LOGERROR, "Error shutting down socket: " + ec.message());
     }
-    return false;
+    socket.close(ec);
+    if (ec)
+    {
+        logger->log(Logger::LogLevel::LOGERROR, "Error closing socket: " + ec.message());
+    }
+    serverAcceptor->unregister_session(shared_from_this());
 }
 
 void Session::send(uint64_t sumOfSquares)
@@ -126,7 +116,7 @@ void Session::send(uint64_t sumOfSquares)
     if (forceShutdown) {
         return;
     }
-    if (shouldTransmit()) {
+    if (!transmitting) {
         write(sumOfSquares);
     } else {
         dataToSend.push_back(sumOfSquares);
@@ -145,19 +135,20 @@ void Session::write(uint64_t sumOfSquares) {
     transmitting = true;
 
     boost::asio::async_write(socket, boost::asio::buffer(&transmitingPacket, sizeof(transmitingPacket)),
-        [this, self](boost::system::error_code ec, std::size_t /*length*/)
+        [this, self](boost::system::error_code ec, std::size_t length)
         {
             transmitting = false;
             if (forceShutdown) {
                 return;
             }
-            if (ec)
+            if (ec || length!=sizeof(transmitingPacket))
             {
                 logger->log(Logger::LogLevel::LOGERROR, "Error sending message: " + ec.message());
+                closeConnection();
                 return;
             }
 
-            if (shouldTransmit()) {
+            if (!dataToSend.empty()) {
                 auto sumOfSquares = dataToSend.front();
                 dataToSend.pop_front();
                 write(sumOfSquares);

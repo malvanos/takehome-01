@@ -41,7 +41,6 @@ public:
 private:
     void read();
     void write(uint64_t sumOfSquares);
-    bool shouldTransmit();
     void closeConnection();
     boost::asio::ip::tcp::socket socket;
     std::shared_ptr<Logger> logger;

@@ -40,6 +40,6 @@ private:
     std::uniform_int_distribution<uint64_t> randomNumberDistribution{ 0, 1023 };
     boost::asio::steady_timer timer;
 
-    const int waitingPeriodForSendinNumber = 5;
+    const int waitingPeriodForSendinNumber = 1;
     bool forceShutdown = false;
 };

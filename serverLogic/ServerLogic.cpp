@@ -53,7 +53,7 @@ void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient
             for (uint64_t num : numbersContainer) {
                 sumOfSquares += num * num;
             }
-
+            logger->info("Sum of squares calculated: " + std::to_string(sumOfSquares));
             whoAsked->send(sumOfSquares);
         }
     );
@@ -94,7 +94,6 @@ void ServerLogic::take_snapshot_after(std::chrono::seconds periodSeconds, std::f
                 return;
             }
             if (!ec) {
-                logger->log(Logger::LogLevel::WARNING,"Snapshot timer expired, taking snapshot.");
                 callback();
             }
             else if (ec == boost::asio::error::operation_aborted) {

@@ -47,7 +47,6 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
                 return;
             }
             if (!ec) {
-                logger->log(Logger::LogLevel::WARNING, "Random number timer expired.");
                 sendRandomNumber();
                 callback();
             }
