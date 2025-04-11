@@ -32,7 +32,6 @@ int main(int argc, char* argv[])
     auto duplicateLogger = std::make_shared<DuplicateLogger>(std::move(constoleLogger), std::move(fileLogger));
 
     // Network client
-    
     boost::asio::io_context networkContext;
     NetworkClient::Dependencies NetworkClientDeps{
         .ioContext = networkContext,

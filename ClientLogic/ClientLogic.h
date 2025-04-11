@@ -6,8 +6,11 @@
 #include <boost/asio.hpp>
 #include "../include/Logger.h"
 #include "../include/NetworkClientProvider.h"
+#include "../include/NetworkClientObserver.h"
 
-class ClientLogic : public std::enable_shared_from_this<ClientLogic>
+class ClientLogic : 
+    public NetworkClientObserver,
+    public std::enable_shared_from_this<ClientLogic>
 {
 public:
     struct Dependencies {
@@ -22,6 +25,7 @@ public:
     void sendSumOfSquaresRequest();
     void sendRandomNumber();
     void stop();
+    void onSumOfSquaresResponse(uint64_t sum);
 
 private:
 

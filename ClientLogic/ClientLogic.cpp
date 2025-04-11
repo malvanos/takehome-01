@@ -20,7 +20,8 @@ ClientLogic::ClientLogic(Dependencies&& deps)
 
 void ClientLogic::start()
 {
-    networkClientProvider->start();
+    auto self(shared_from_this());
+    networkClientProvider->start(self);
     logger->info("ClientLogic started");
 }
 
@@ -72,6 +73,10 @@ void ClientLogic::sendRandomNumber()
     uint64_t data = randomNumberDistribution(randomNumberGenerator);
     logger->info("Sending random number " + std::to_string(data));
     networkClientProvider->sendRandomNumber(data);
+}
+
+void ClientLogic::onSumOfSquaresResponse(uint64_t sum) {
+    logger->log(Logger::LogLevel::INFO, "Received sum of squares: " + std::to_string(sum));
 }
 
 void ClientLogic::stop()

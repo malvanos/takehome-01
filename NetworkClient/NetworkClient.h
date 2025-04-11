@@ -33,6 +33,5 @@ private:
     std::shared_ptr<NetworkClientObserver> networkClientProvider;
     boost::asio::io_context& ioContext;
     boost::asio::ip::tcp::socket socket;
-    boost::asio::ip::tcp::resolver resolver;
     boost::asio::ip::tcp::resolver::results_type endpoints;
 };

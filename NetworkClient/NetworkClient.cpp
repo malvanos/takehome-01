@@ -11,7 +11,7 @@
 NetworkClient::NetworkClient(Dependencies&& deps)
     : logger(std::move(deps.logger))
     , ioContext(deps.ioContext)
-    , networkClientProvider(std::move(deps.networkClientProvider))
+    , socket(deps.ioContext)
 {
 }
 
@@ -19,8 +19,13 @@ NetworkClient::~NetworkClient()
 {
 }
 
-void NetworkClient::start()
+void NetworkClient::start(std::shared_ptr<NetworkClientObserver> networkClientProvider)
 {
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self, networkClientProvider = std::move(networkClientProvider)]() {
+        this->networkClientProvider = networkClientProvider;
+        logger->log(Logger::LogLevel::INFO, "NetworkClient started");
+    });
 }
 
 void NetworkClient::stop()
