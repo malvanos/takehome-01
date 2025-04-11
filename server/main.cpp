@@ -32,10 +32,10 @@ static void runAsioContext(boost::asio::io_context& ctx) {
 int main(int argc, char *argv[])
 {
     // Logger
-    auto constoleLogger = std::make_unique<ConsoleLogger>();
-    auto fileLogger = std::make_unique<FileLogger>();
-    auto duplicateLogger = std::make_shared<DuplicateLogger>(std::move(constoleLogger), std::move(fileLogger));
-
+    auto logger = std::make_shared<DuplicateLogger>(
+        std::make_unique<ConsoleLogger>(),
+        std::make_unique<FileLogger>()
+    );
 
     int waitingPeriodForDumps = 10;
 
@@ -47,20 +47,20 @@ int main(int argc, char *argv[])
                 break;
             }
             catch (const std::exception& e) {
-                duplicateLogger->log(Logger::LogLevel::LOGERROR, "Invalid number for -N: " + std::string(argv[i + 1]));
-                duplicateLogger->log(Logger::LogLevel::LOGERROR, "Setting default value 10.");
+                logger->log(Logger::LogLevel::LOGERROR, "Invalid number for -N: " + std::string(argv[i + 1]));
+                logger->log(Logger::LogLevel::LOGERROR, "Setting default value 10.");
                 waitingPeriodForDumps = 10;
             }
         }
     }
 
-    duplicateLogger->info("N seconds to take a dump is set to: " + std::to_string(waitingPeriodForDumps));
+    logger->info("N seconds to take a dump is set to: " + std::to_string(waitingPeriodForDumps));
 
     // File operations
     boost::asio::io_context fileSystemOperationsContext;
     SystemFileOperations::Dependencies filedeps{
         .ioContext = fileSystemOperationsContext,
-        .logger = duplicateLogger
+        .logger = logger
     };
 
     auto fileOperations = std::make_unique<SystemFileOperations>(std::move(filedeps));
@@ -69,14 +69,14 @@ int main(int argc, char *argv[])
     boost::asio::io_context networkContext;
     NetworkServer::Dependencies networkServerDeps{
         .ioContext = networkContext,
-        .logger = duplicateLogger
+        .logger = logger
     };
     auto server = std::make_shared<NetworkServer>(std::move(networkServerDeps));
 
     // Logic
     boost::asio::io_context logicContext;
     ServerLogic::Dependencies deps{
-        .logger = duplicateLogger,
+        .logger = logger,
         .waitingPeriodForDumps = 10,
         .io_context = logicContext,
         .server = server,
@@ -86,16 +86,16 @@ int main(int argc, char *argv[])
 
     logic->start();
 
-    std::thread thread1(runAsioContext, std::ref(networkContext));
-    std::thread thread2(runAsioContext, std::ref(logicContext));
-    std::thread thread3(runAsioContext, std::ref(fileSystemOperationsContext));
+    std::thread networkThread(runAsioContext, std::ref(networkContext));
+    std::thread logicThread(runAsioContext, std::ref(logicContext));
+    std::thread filesystemThread(runAsioContext, std::ref(fileSystemOperationsContext));
 
-    duplicateLogger->info("Press ESC to close");
+    logger->info("Press ESC to close");
     while (true) {
         if (_kbhit()) {
             int key = _getch();
             if (key == 27) { // ASCII code for Escape key
-                duplicateLogger->info("Received ESC. Closing.");
+                logger->info("Received ESC. Closing.");
                 logic->stop();
                 break;
             }
@@ -103,9 +103,9 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    thread1.join();
-    thread2.join();
-    thread3.join();
+    networkThread.join();
+    logicThread.join();
+    filesystemThread.join();
    
 }
 
