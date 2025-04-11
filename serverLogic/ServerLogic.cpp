@@ -38,6 +38,7 @@ void ServerLogic::start()
 void ServerLogic::onNewNumber(uint64_t number) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number]() {
+        logger->info("New number received: " + std::to_string(number));
         numbersContainer.insert(number);
         }
     );
@@ -46,6 +47,7 @@ void ServerLogic::onNewNumber(uint64_t number) {
 void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number, whoAsked=std::move(whoAsked)]() {
+            logger->info("Sum of squares requested: " + std::to_string(number));
             uint64_t sumOfSquares = number * number;
 
             for (uint64_t num : numbersContainer) {
@@ -56,13 +58,6 @@ void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient
         }
     );
 }
-
-void ServerLogic::onNetworkStop()
-{
-    logger->log(Logger::LogLevel::INFO, "Network stopped");
-    // Handle stop logic here
-}
-
 
 void ServerLogic::stop()
 {

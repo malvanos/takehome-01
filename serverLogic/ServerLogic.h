@@ -32,7 +32,6 @@ class ServerLogic : public NetworkObserver, public std::enable_shared_from_this<
         void start();
         void onNewNumber(uint64_t number) override;
         void onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) override;
-        void onNetworkStop() override;
         void stop();
 private:
     void take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback);

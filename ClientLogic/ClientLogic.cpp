@@ -22,14 +22,13 @@ void ClientLogic::start()
 {
     auto self(shared_from_this());
     networkClientProvider->start(self);
+    start_random_number_timer();
     logger->info("ClientLogic started");
 }
 
 void ClientLogic::start_random_number_timer() {
-    logger->log(Logger::LogLevel::INFO, "Snapshot timer started");
     auto self(shared_from_this());
     send_random_number_after(std::chrono::seconds(waitingPeriodForSendinNumber), [this, self]() {
-        logger->log(Logger::LogLevel::INFO, "Taking snapshot...");
         start_random_number_timer();
         });
 }
@@ -42,13 +41,14 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
 
     timer.expires_after(periodSeconds);
     timer.async_wait(
-        [this, callback](const boost::system::error_code& ec) {
+        [this, callback(std::move(callback))](const boost::system::error_code& ec) {
             if (forceShutdown) {
                 logger->log(Logger::LogLevel::WARNING, "ClientLogic is shutting down, aborting timer.");
                 return;
             }
             if (!ec) {
-                logger->log(Logger::LogLevel::WARNING, "Snapshot timer expired, taking snapshot.");
+                logger->log(Logger::LogLevel::WARNING, "Random number timer expired.");
+                sendRandomNumber();
                 callback();
             }
             else if (ec == boost::asio::error::operation_aborted) {
@@ -57,7 +57,6 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
             else {
                 logger->log(Logger::LogLevel::LOGERROR, "Snapshot timer error.");
             }
-            sendRandomNumber();
         });
 }
 

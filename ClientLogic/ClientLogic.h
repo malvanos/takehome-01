@@ -23,12 +23,12 @@ public:
     ~ClientLogic();
     void start();
     void sendSumOfSquaresRequest();
-    void sendRandomNumber();
     void stop();
     void onSumOfSquaresResponse(uint64_t sum);
 
 private:
 
+    void sendRandomNumber();
     void start_random_number_timer();
     void send_random_number_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback);
 

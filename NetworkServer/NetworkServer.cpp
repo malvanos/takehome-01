@@ -27,11 +27,12 @@ void NetworkServer::start(std::shared_ptr<NetworkObserver> observer)
     boost::asio::post(io_context, [this,self, observer=std::move(observer)]() {
         this->observer = observer;
         startAccepting();
+        logger->log(Logger::LogLevel::INFO, "NetworkServer started");
     });
 }
 
 void NetworkServer::startAccepting() {
-    logger->log(Logger::LogLevel::INFO, "NetworkServer started");
+    
 
     auto self(shared_from_this());
     acceptor.async_accept(
@@ -42,6 +43,7 @@ void NetworkServer::startAccepting() {
                 logger->log(Logger::LogLevel::LOGERROR, "Error accepting connection: " + ec.message());
                 return;
             }
+            logger->log(Logger::LogLevel::INFO, "New network connection");
             socket.set_option(forceKeepAliveOption);
             Session::Depedencies deps = {
                 .socket = std::move(socket),
@@ -67,7 +69,9 @@ void NetworkServer::stop()
 }
 
 void NetworkServer::closeSessions() {
-    // Close all connections here
+    for (const auto& session : sessions) {
+        session->close();
+    }
 }
 
 void NetworkServer::stopAccepting() {

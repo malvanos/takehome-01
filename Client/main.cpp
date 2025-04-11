@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
     std::thread thread2(runAsioContext, std::ref(logicContext));
 
     duplicateLogger->info("Press ESC to close");
+    duplicateLogger->info("Press '1' to request sum of squares");
     while (true) {
         if (_kbhit()) {
             int key = _getch();
@@ -63,7 +64,8 @@ int main(int argc, char* argv[])
                 break;
             }
             else if (key == '1') {
-                // TODO: Send a random number and ask for sum of squares
+                duplicateLogger->info("Received '1'. Requesting sum of squares.");
+                logic->sendSumOfSquaresRequest();
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

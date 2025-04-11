@@ -67,7 +67,7 @@ void Session::read() {
                 logger->log(Logger::LogLevel::LOGERROR, "Invalid hash check.");
                 close();
             }
-            
+            logger->log(Logger::LogLevel::INFO, "Received packet type: " + std::to_string(static_cast<uint32_t>(receivePacketData.packetType)));
             switch (receivePacketData.packetType) {
             case  PacketType::DATA_ADD:
                 observer->onNewNumber(receivePacketData.data);
@@ -115,7 +115,7 @@ void Session::closeConnection() {
 }
 
 bool Session::shouldTransmit() {
-    if (dataToSend.size() > 0 and !transmitting and !forceShutdown) {
+    if (dataToSend.size() > 0 and !transmitting) {
         return true;
     }
     return false;
@@ -123,6 +123,9 @@ bool Session::shouldTransmit() {
 
 void Session::send(uint64_t sumOfSquares)
 {
+    if (forceShutdown) {
+        return;
+    }
     if (shouldTransmit()) {
         write(sumOfSquares);
     } else {

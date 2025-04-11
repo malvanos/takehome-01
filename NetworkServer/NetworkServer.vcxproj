@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClInclude Include="NetworkServer.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Protocol.h" />
     <ClInclude Include="Session.h" />
   </ItemGroup>
   <ItemGroup>

@@ -15,8 +15,7 @@
 
 #include "../include/Logger.h"
 #include "../include/NumbersClient.h"
-
-#include "Protocol.h"
+#include "../include/Protocol.h"
 
 class NetworkServer;
 class NetworkObserver;

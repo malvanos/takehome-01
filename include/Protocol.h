@@ -10,10 +10,10 @@
 
 #pragma pack(push, 1) // 1-byte alignment
 
-enum class PacketType : uint32_t { 
-    INVALID=0, 
-    DATA_ADD=1, 
-    SUM_OF_SQUARES_REQUEST, 
+enum class PacketType : uint32_t {
+    INVALID = 0,
+    DATA_ADD = 1,
+    SUM_OF_SQUARES_REQUEST,
     SUM_OF_SQUARES_ANSWER
 };
 

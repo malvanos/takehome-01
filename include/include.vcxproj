@@ -134,6 +134,7 @@
     <ClInclude Include="NumbersClient.h" />
     <ClInclude Include="NetworkProvider.h" />
     <ClInclude Include="NetworkObserver.h" />
+    <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

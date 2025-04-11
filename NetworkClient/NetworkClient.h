@@ -10,6 +10,8 @@
 #include <boost/asio.hpp>
 #include "../include/Logger.h"
 #include "../include/NetworkClientProvider.h"
+#include "../include/Protocol.h"
+#include <deque>
 
 class NetworkClientObserver;
 
@@ -29,9 +31,26 @@ public:
     void sendRandomNumber(uint64_t number) override;
     void sendSumOfSquaresRequest(uint64_t number) override;
 private:
+
+    void enqueueOrTransmit(uint64_t number, PacketType type);
+    void connect();
+    void read();
+    void write();
+    void requestSumSquares(uint64_t number);
+    void closeConnection();
+    bool shouldTransmit();
+
     std::shared_ptr<Logger> logger;
-    std::shared_ptr<NetworkClientObserver> networkClientProvider;
+    std::shared_ptr<NetworkClientObserver> observer;
     boost::asio::io_context& ioContext;
     boost::asio::ip::tcp::socket socket;
+    boost::asio::ip::tcp::resolver resolver;
     boost::asio::ip::tcp::resolver::results_type endpoints;
+    NetworkPacket receivedPacketData;
+    std::deque<NetworkPacket> dataToSend;
+    NetworkPacket transmitingPacket;
+    bool isConnected = false;
+    bool transmitting = false;
+    bool forceShutdown = false;
+
 };
