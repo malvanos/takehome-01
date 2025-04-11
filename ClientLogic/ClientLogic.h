@@ -24,7 +24,9 @@ public:
     void start();
     void sendSumOfSquaresRequest();
     void stop();
-    void onSumOfSquaresResponse(uint64_t sum);
+    void onSumOfSquaresResponse(uint64_t sum) override;
+    void onDisconnect() override;
+    void onConnect() override;
 
 private:
 
@@ -42,4 +44,5 @@ private:
 
     const int waitingPeriodForSendinNumber = 1;
     bool forceShutdown = false;
+    bool transmitNumbers = false;
 };

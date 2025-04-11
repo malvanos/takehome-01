@@ -61,6 +61,7 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
 
 void ClientLogic::sendSumOfSquaresRequest()
 {
+    if (!transmitNumbers) return;
     uint64_t data = randomNumberDistribution(randomNumberGenerator);
     logger->info("Sending sum of squares request with number " + std::to_string(data));
     networkClientProvider->sendSumOfSquaresRequest(data);
@@ -68,6 +69,7 @@ void ClientLogic::sendSumOfSquaresRequest()
 
 void ClientLogic::sendRandomNumber()
 {
+    if (!transmitNumbers) return;
     uint64_t data = randomNumberDistribution(randomNumberGenerator);
     logger->info("Sending random number " + std::to_string(data));
     networkClientProvider->sendRandomNumber(data);
@@ -77,15 +79,34 @@ void ClientLogic::onSumOfSquaresResponse(uint64_t sum) {
     logger->log(Logger::LogLevel::INFO, "Received sum of squares: " + std::to_string(sum));
 }
 
+void ClientLogic::onDisconnect()
+{
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self]() {
+        logger->log(Logger::LogLevel::WARNING, "Disconnected from server. Will not send other numbers.");
+        transmitNumbers = false;
+    });
+}
+
+void ClientLogic::onConnect()
+{
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self]() {
+        transmitNumbers = true;
+    });
+}
+
 void ClientLogic::stop()
 {
-    networkClientProvider->stop();
-    timer.cancel();
-    logger->info("ClientLogic stopped");
-    forceShutdown = true;
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self]() {
+        networkClientProvider->stop();
+        timer.cancel();
+        logger->info("ClientLogic stopped");
+        forceShutdown = true;
+    });
 }
 
 ClientLogic::~ClientLogic()
 {
-    stop();
 }

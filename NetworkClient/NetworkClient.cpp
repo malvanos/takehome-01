@@ -51,6 +51,7 @@ void NetworkClient::connect()
                         if (!ec) {
                             logger->log(Logger::LogLevel::INFO, "Connected to server");
                             isConnected = true;
+                            observer->onConnect();
                             read();
                         }
                         else {
@@ -79,6 +80,7 @@ void NetworkClient::read()
             if (ec) {
                 logger->log(Logger::LogLevel::LOGERROR, "Error receiving message: " + ec.message());
                 isConnected = false;
+                closeConnection();
                 return;
             }
 
@@ -184,5 +186,6 @@ void NetworkClient::closeConnection()
         logger->log(Logger::LogLevel::LOGERROR, "Error closing socket: " + ec.message());
     }
     isConnected = false;
+    observer->onDisconnect();
 }
 

@@ -32,7 +32,6 @@ Session::Session(Depedencies deps)
 
 Session::~Session()
 {
-    close();
 }
 
 void Session::start()
