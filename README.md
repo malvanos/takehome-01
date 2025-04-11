@@ -18,19 +18,27 @@ with clients
 * Output all the processes into console and the application's log file
 * When developing, you must use the Boost Asio library
 
+## Notes
+* It will print on screen the progress of the test
+* Logs also in the file
+* Dumps the data to a file every N seconds (use -N to override)
+* Posts the tasks to the io context to avoid additional locks
+* Does not support reconnection in the client (not requested)
+
 ## How to run
 
 * Compile all
 * Run run_10_clients_1_server.bat
+
+![Screenshot of a comment on a GitHub issue showing an image, added in the Markdown, of an Octocat smiling and raising a tentacle.](/images/Capture.PNG)
+
 
 ## License
 
 Copyright (c) 2025 Michael Alvanos Services LTD All rights reserved.
 
 This software is provided "as is" without any express or implied
-warranty. 
-
-In no event will the authors be held liable for any damages
+warranty. In no event will the authors be held liable for any damages
 arising from the use of this software.
 
 This software is the property of Michael Alvanos Services LTD.
