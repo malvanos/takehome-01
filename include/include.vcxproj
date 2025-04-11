@@ -129,6 +129,8 @@
   <ItemGroup>
     <ClInclude Include="FileOperations.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="NetworkClientObserver.h" />
+    <ClInclude Include="NetworkClientProvider.h" />
     <ClInclude Include="NumbersClient.h" />
     <ClInclude Include="NetworkProvider.h" />
     <ClInclude Include="NetworkObserver.h" />

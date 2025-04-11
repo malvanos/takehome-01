@@ -5,16 +5,10 @@
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 
-#pragma once
+#include <iostream>
 
-#include <memory>
-
-class NetworkObserver;
-
-class NetworkProvider 
+int main()
 {
-public:
-    virtual ~NetworkProvider() = default;
-    virtual void start(std::shared_ptr<NetworkObserver> observer) = 0;
-    virtual void stop() = 0;
-};
+    std::cout << "Hello World!\n";
+}
+

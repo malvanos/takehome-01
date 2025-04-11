@@ -10,7 +10,7 @@
 #include "../logger/ConsoleLogger.h"
 #include "../logger/FileLogger.h"
 #include "../logger/DuplicateLogger.h"
-#include "../logic/Logic.h"
+#include "../serverLogic/Logic.h"
 #include "../include/Logger.h"
 #include "../NetworkServer/NetworkServer.h"
 #include "../FileOperations/SystemFileOperations.h"
