@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     thread1.join();
