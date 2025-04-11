@@ -4,12 +4,14 @@
 // This software is provided "as is" without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
-
+//
+// This software is the property of Michael Alvanos Services LTD.
+// Redistribution or reproduction, in whole or in part, is not permitted
+// without explicit prior written permission from the owner.
 
 #include "pch.h"
 #include "SystemFileOperations.h"
 
-// TODO: add locks or queue post
 
 SystemFileOperations::SystemFileOperations(Dependencies&& deps)
     : workGuard(deps.ioContext.get_executor())
@@ -31,7 +33,7 @@ void SystemFileOperations::writeFile(const std::unordered_set<uint64_t>& numbers
         uint32_t count = static_cast<uint32_t>(numbers.size());
         outputFile.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
-        // The actual numbers
+        // The actual numbers - we can use short here sice we know the values are 0<= x <= 1023
         for (uint64_t num : numbers) {
             outputFile.write(reinterpret_cast<const char*>(&num), sizeof(num));
         }

@@ -149,7 +149,6 @@
     <ClInclude Include="FileLogger.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DuplicateLogger.cpp" />
     <ClCompile Include="FileLogger.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

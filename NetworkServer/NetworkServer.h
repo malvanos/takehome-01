@@ -4,7 +4,11 @@
 // This software is provided "as is" without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
- 
+//
+// This software is the property of Michael Alvanos Services LTD.
+// Redistribution or reproduction, in whole or in part, is not permitted
+// without explicit prior written permission from the owner.
+
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
