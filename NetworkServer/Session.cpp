@@ -82,6 +82,7 @@ void Session::read() {
                 closeConnection();
                 return;
             }
+
             read();
         });
 }

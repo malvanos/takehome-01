@@ -32,6 +32,26 @@ int main(int argc, char *argv[])
     auto fileLogger = std::make_unique<FileLogger>();
     auto duplicateLogger = std::make_shared<DuplicateLogger>(std::move(constoleLogger), std::move(fileLogger));
 
+
+    int waitingPeriodForDumps = 10;
+
+    for (int i = 1; i < argc - 1; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-N") {
+            try {
+                waitingPeriodForDumps = std::stoi(argv[i + 1]);
+                break;
+            }
+            catch (const std::exception& e) {
+                duplicateLogger->log(Logger::LogLevel::LOGERROR, "Invalid number for -N: " + std::string(argv[i + 1]));
+                duplicateLogger->log(Logger::LogLevel::LOGERROR, "Setting default value 10.");
+                waitingPeriodForDumps = 10;
+            }
+        }
+    }
+
+    duplicateLogger->info("N seconds to take a dump is set to: " + std::to_string(waitingPeriodForDumps));
+
     // File operations
     boost::asio::io_context fileSystemOperationsContext;
     SystemFileOperations::Dependencies filedeps{
