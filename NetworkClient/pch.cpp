@@ -1,5 +1,9 @@
-// pch.cpp: source file corresponding to the pre-compiled header
+// Copyright (c) 2025 Michael Alvanos Services LTD
+// All rights reserved.
+//
+// This software is provided "as is" without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
 
 #include "pch.h"
-
-// When you are using pre-compiled headers, this source file is necessary for compilation to succeed.
+#include "NetworkClient.h"
