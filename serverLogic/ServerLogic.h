@@ -17,7 +17,7 @@
 #include "../include/NumbersClient.h"
 #include "../include/FileOperations.h"
 
-class Logic : public NetworkObserver, public std::enable_shared_from_this<Logic> {
+class ServerLogic : public NetworkObserver, public std::enable_shared_from_this<ServerLogic> {
     public:
         struct Dependencies {
             std::shared_ptr<Logger> logger;
@@ -27,8 +27,8 @@ class Logic : public NetworkObserver, public std::enable_shared_from_this<Logic>
             std::unique_ptr<FileOperations> fileOperations;
         };
 
-        Logic(Dependencies&& dependencies);
-        ~Logic();
+        ServerLogic(Dependencies&& dependencies);
+        ~ServerLogic();
         void start();
         void onNewNumber(uint64_t number) override;
         void onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) override;
@@ -46,4 +46,5 @@ private:
     std::unordered_set<uint64_t> numbersContainer;
     boost::asio::io_context& ioContext;
     std::shared_ptr<FileOperations> fileOperations;
+    bool forceShutdown = false;
 };

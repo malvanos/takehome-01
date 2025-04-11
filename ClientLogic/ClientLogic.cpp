@@ -42,6 +42,10 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
     timer.expires_after(periodSeconds);
     timer.async_wait(
         [this, callback](const boost::system::error_code& ec) {
+            if (forceShutdown) {
+                logger->log(Logger::LogLevel::WARNING, "ClientLogic is shutting down, aborting timer.");
+                return;
+            }
             if (!ec) {
                 logger->log(Logger::LogLevel::WARNING, "Snapshot timer expired, taking snapshot.");
                 callback();
@@ -75,6 +79,7 @@ void ClientLogic::stop()
     networkClientProvider->stop();
     timer.cancel();
     logger->info("ClientLogic stopped");
+    forceShutdown = true;
 }
 
 ClientLogic::~ClientLogic()

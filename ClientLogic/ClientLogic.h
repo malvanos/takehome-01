@@ -37,5 +37,5 @@ private:
     boost::asio::steady_timer timer;
 
     const int waitingPeriodForSendinNumber = 5;
-
+    bool forceShutdown = false;
 };

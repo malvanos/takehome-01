@@ -115,7 +115,7 @@ void Session::closeConnection() {
 }
 
 bool Session::shouldTransmit() {
-    if (dataToSend.size() > 0 and !transmitting) {
+    if (dataToSend.size() > 0 and !transmitting and !forceShutdown) {
         return true;
     }
     return false;

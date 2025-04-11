@@ -6,7 +6,7 @@
 // arising from the use of this software.
 
 #include "pch.h"
-#include "Logic.h"
+#include "ServerLogic.h"
 #include <chrono>
 #include <functional>
 #include "boost/asio.hpp"
@@ -14,7 +14,7 @@
 #include "boost/system/error_code.hpp"
 #include "boost/system/detail/error_category.hpp"
 
-Logic::Logic(Dependencies&& dependencies)
+ServerLogic::ServerLogic(Dependencies&& dependencies)
     : logger(std::move(dependencies.logger))
     , waitingPeriodForDumps(dependencies.waitingPeriodForDumps)
     , timer(dependencies.io_context)
@@ -24,18 +24,18 @@ Logic::Logic(Dependencies&& dependencies)
 {
 }
 
-Logic::~Logic()
+ServerLogic::~ServerLogic()
 {
 }
 
-void Logic::start()
+void ServerLogic::start()
 {
     logger->log(Logger::LogLevel::INFO, "Logic started");
     start_snapshot_timer();
     server->start(shared_from_this());
 }
 
-void Logic::onNewNumber(uint64_t number) {
+void ServerLogic::onNewNumber(uint64_t number) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number]() {
         numbersContainer.insert(number);
@@ -43,7 +43,7 @@ void Logic::onNewNumber(uint64_t number) {
     );
 }
 
-void Logic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) {
+void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) {
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, number, whoAsked=std::move(whoAsked)]() {
             uint64_t sumOfSquares = number * number;
@@ -57,22 +57,26 @@ void Logic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoA
     );
 }
 
-void Logic::onNetworkStop()
+void ServerLogic::onNetworkStop()
 {
     logger->log(Logger::LogLevel::INFO, "Network stopped");
     // Handle stop logic here
 }
 
 
-void Logic::stop()
+void ServerLogic::stop()
 {
-    logger->log(Logger::LogLevel::INFO, "Logic stopped");
-    timer.cancel();
-    fileOperations->stop();
-    server->stop();
+    auto self(shared_from_this());
+    boost::asio::post(ioContext, [this, self]() {
+        logger->log(Logger::LogLevel::INFO, "Logic stopped");
+        timer.cancel();
+        fileOperations->stop();
+        server->stop();
+        forceShutdown = true;
+     });
 }
 
-void Logic::start_snapshot_timer() {
+void ServerLogic::start_snapshot_timer() {
     logger->log(Logger::LogLevel::INFO, "Snapshot timer started");
     auto self(shared_from_this());
     take_snapshot_after(std::chrono::seconds(waitingPeriodForDumps), [this, self]() {
@@ -81,7 +85,7 @@ void Logic::start_snapshot_timer() {
     });
 }
 
-void Logic::take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback) {
+void ServerLogic::take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback) {
     if (periodSeconds <= std::chrono::seconds(0)) {
         callback();
         return;
@@ -90,6 +94,10 @@ void Logic::take_snapshot_after(std::chrono::seconds periodSeconds, std::functio
     timer.expires_after(periodSeconds);
     timer.async_wait(
         [this, callback](const boost::system::error_code& ec) {
+            if (forceShutdown) {
+                logger->log(Logger::LogLevel::INFO, "Snapshot timer was aborted due to shutdown.");
+                return;
+            }
             if (!ec) {
                 logger->log(Logger::LogLevel::WARNING,"Snapshot timer expired, taking snapshot.");
                 callback();

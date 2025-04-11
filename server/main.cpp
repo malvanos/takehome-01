@@ -10,7 +10,7 @@
 #include "../logger/ConsoleLogger.h"
 #include "../logger/FileLogger.h"
 #include "../logger/DuplicateLogger.h"
-#include "../serverLogic/Logic.h"
+#include "../serverLogic/ServerLogic.h"
 #include "../include/Logger.h"
 #include "../NetworkServer/NetworkServer.h"
 #include "../FileOperations/SystemFileOperations.h"
@@ -51,14 +51,14 @@ int main(int argc, char *argv[])
 
     // Logic
     boost::asio::io_context logicContext;
-    Logic::Dependencies deps{
+    ServerLogic::Dependencies deps{
         .logger = duplicateLogger,
         .waitingPeriodForDumps = 10,
         .io_context = logicContext,
         .server = server,
         .fileOperations = std::move(fileOperations)
     };
-    auto logic = std::make_shared<Logic>(std::move(deps));
+    auto logic = std::make_shared<ServerLogic>(std::move(deps));
 
     logic->start();
 
