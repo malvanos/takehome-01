@@ -22,7 +22,6 @@ NetworkServer::NetworkServer(Dependencies&& deps)
 
 NetworkServer::~NetworkServer()
 {
-    stop();
 }
 
 void NetworkServer::start(std::shared_ptr<NetworkObserver> observer)
