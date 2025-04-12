@@ -55,4 +55,5 @@ private:
     std::shared_ptr<NetworkObserver> observer;
     boost::asio::socket_base::keep_alive forceKeepAliveOption =
         boost::asio::socket_base::keep_alive(true);
+    bool forceShutdown = false;
 };

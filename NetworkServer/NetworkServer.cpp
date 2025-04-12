@@ -35,11 +35,16 @@ void NetworkServer::startAccepting() {
     acceptor.async_accept(
         [this,self](boost::system::error_code ec, boost::asio::ip::tcp::socket socket)
         {
+            if (forceShutdown)
+            {
+                return;
+            }
             if (ec)
             {
                 logger->log(Logger::LogLevel::LOGERROR, "Error accepting connection: " + ec.message());
                 return;
             }
+
             logger->log(Logger::LogLevel::INFO, "New network connection");
             socket.set_option(forceKeepAliveOption);
             Session::Depedencies deps = {
@@ -60,6 +65,7 @@ void NetworkServer::stop()
 {
     auto self(shared_from_this());
     boost::asio::post(io_context, [this, self]() {
+        forceShutdown = true;
         stopAccepting();
         closeSessions();
     });
@@ -73,11 +79,10 @@ void NetworkServer::closeSessions() {
 
 void NetworkServer::stopAccepting() {
     // Note: this is blocking, for simplicity
-    try {
-        acceptor.close();
-    } catch (const std::exception& e) {
-        // Ensure that we continue the execution
-        logger->log(Logger::LogLevel::LOGERROR, "Error closing acceptor: " + std::string(e.what()));
+    boost::system::error_code ec;
+    acceptor.close(ec);
+    if (ec) {
+        logger->log(Logger::LogLevel::LOGERROR, "Error closing acceptor: " + ec.message());
     }
 }
 
