@@ -19,6 +19,7 @@ with clients
 * When developing, you must use the Boost Asio library
 
 ## Notes
+* Boost is required in the path ..\boost\include\boost-1_87
 * Displays the progress of the test on screen
 * Logs are also written to a file
 * Dumps data to a file every N seconds (use -N <value> to override)
