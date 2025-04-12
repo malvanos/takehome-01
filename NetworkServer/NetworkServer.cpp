@@ -14,7 +14,7 @@
 #include "Session.h"
 
 NetworkServer::NetworkServer(Dependencies&& deps)
-    : acceptor(deps.ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 12345))
+    : acceptor(deps.ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), PORT_NUMBER))
     , logger(deps.logger)
     , io_context(deps.ioContext)
 {
@@ -72,7 +72,8 @@ void NetworkServer::stop()
 }
 
 void NetworkServer::closeSessions() {
-    for (const auto& session : sessions) {
+    auto copyOfSessions = std::move(sessions);
+    for (const auto& session : copyOfSessions) {
         session->close();
     }
 }

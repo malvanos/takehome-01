@@ -25,6 +25,8 @@
 #include <conio.h> // For _kbhit() and _getch()
 #include "../include/AsioTimer.h"
 
+constexpr int KEY_ESCAPE = 27;
+
 static void runAsioContext(boost::asio::io_context& ctx) {
     ctx.run();
 }
@@ -69,7 +71,7 @@ int main(int argc, char* argv[])
     while (true) {
         if (_kbhit()) {
             int key = _getch();
-            if (key == 27) { // ASCII code for Escape key
+            if (key == KEY_ESCAPE) { // ASCII code for Escape key
                 logger->info("Received ESC. Closing.");
                 logic->stop();
                 break;

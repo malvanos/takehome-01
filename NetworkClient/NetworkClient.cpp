@@ -43,7 +43,7 @@ void NetworkClient::stop()
 void NetworkClient::resolve()
 {
     auto self = shared_from_this();
-    resolver.async_resolve("127.0.0.1", "12345",
+    resolver.async_resolve(TARGET_HOST, PORT_NUMBER_STRING,
         [this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) {
             if (forceShutdown) {
                 return;

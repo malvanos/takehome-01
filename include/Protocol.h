@@ -11,6 +11,7 @@
 
 #pragma once
 #include <cstdint>
+#include <string_view>
 
 #pragma pack(push, 1) // 1-byte alignment
 
@@ -60,5 +61,19 @@ static void fillPacket(NetworkPacket& packet, PacketType packetType, uint64_t da
     packet.data = data;
     packet.hashCheck = packetHashCalculator(packet);
 }
+
+constexpr std::string_view PORT_NUMBER_STRING = "12345";
+constexpr uint16_t parse_port(std::string_view s) {
+    uint16_t result = 0;
+    for (char c : s) {
+        if (c < '0' || c > '9') throw "invalid digit"; // or custom error
+        result = result * 10 + (c - '0');
+    }
+    return result;
+}
+constexpr uint16_t PORT_NUMBER = parse_port(PORT_NUMBER_STRING);
+constexpr size_t PACKET_SIZE = sizeof(NetworkPacket);
+constexpr std::string_view TARGET_HOST = "127.0.0.1";
+
 
 #pragma pack(pop)
