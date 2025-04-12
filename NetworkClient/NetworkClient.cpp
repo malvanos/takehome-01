@@ -26,7 +26,7 @@ void NetworkClient::start(std::shared_ptr<NetworkClientObserver> networkClientPr
     auto self(shared_from_this());
     boost::asio::post(ioContext, [this, self, networkClientProvider = std::move(networkClientProvider)]() {
         this->observer = networkClientProvider;
-        connect();
+        resolve();
         logger->log(Logger::LogLevel::INFO, "NetworkClient started");
     });
 }
@@ -40,29 +40,41 @@ void NetworkClient::stop()
     });
 }
 
-void NetworkClient::connect()
+void NetworkClient::resolve()
 {
     auto self = shared_from_this();
     resolver.async_resolve("127.0.0.1", "12345",
         [this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) {
-            if (!ec) {
-                boost::asio::async_connect(socket, results,
-                    [this, self](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint&) {
-                        if (!ec) {
-                            logger->log(Logger::LogLevel::INFO, "Connected to server");
-                            isConnected = true;
-                            observer->onConnect();
-                            read();
-                        }
-                        else {
-                            logger->log(Logger::LogLevel::LOGERROR, "Error connecting to server: " + ec.message());
-                            isConnected = false;
-                        }
-                    });
+            if (forceShutdown) {
+                return;
             }
-            else {
+            if (ec) {
                 logger->log(Logger::LogLevel::LOGERROR, "Error resolving address: " + ec.message());
+                return;
             }
+            logger->log(Logger::LogLevel::INFO, "Resolved address");
+            connect(std::move(results));
+        });
+}
+
+void NetworkClient::connect(boost::asio::ip::tcp::resolver::results_type&& result)
+{
+    auto self = shared_from_this();
+    boost::asio::async_connect(socket, std::move(result),
+        [this, self](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint&) {
+            if (forceShutdown) {
+                return;
+            }
+            if (ec) {
+                logger->log(Logger::LogLevel::LOGERROR, "Error connecting to server: " + ec.message());
+                isConnected = false;
+                return;
+            }
+
+            logger->log(Logger::LogLevel::INFO, "Connected to server");
+            isConnected = true;
+            observer->onConnect();
+            read();
         });
 }
 

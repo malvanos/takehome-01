@@ -36,7 +36,8 @@ public:
 private:
 
     void enqueueOrTransmit(uint64_t number, PacketType type);
-    void connect();
+    void resolve();
+    void connect(boost::asio::ip::tcp::resolver::results_type&& result);
     void read();
     void write();
     void requestSumSquares(uint64_t number);
