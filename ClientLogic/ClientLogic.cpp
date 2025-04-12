@@ -16,8 +16,8 @@
 ClientLogic::ClientLogic(Dependencies&& deps)
     : logger(std::move(deps.logger))
     , networkClientProvider(std::move(deps.networkClientProvider))
-    , ioContext(deps.ioContext)
-    , timer(deps.ioContext)
+    , timer(std::move(deps.timer))
+    , taskPoster(std::move(deps.taskPoster))
 {
     randomNumberGenerator.seed(std::random_device{}());
 }
@@ -42,33 +42,26 @@ void ClientLogic::send_random_number_after(std::chrono::seconds periodSeconds, s
         callback();
         return;
     }
-
-    timer.expires_after(periodSeconds);
-    timer.async_wait(
-        [this, callback(std::move(callback))](const boost::system::error_code& ec) {
-            if (forceShutdown) {
-                logger->log(Logger::LogLevel::WARNING, "ClientLogic is shutting down, aborting timer.");
-                return;
-            }
-            if (!ec) {
-                sendRandomNumber();
-                callback();
-            }
-            else if (ec == boost::asio::error::operation_aborted) {
-                logger->log(Logger::LogLevel::WARNING, "Snapshot timer was aborted.");
-            }
-            else {
-                logger->log(Logger::LogLevel::LOGERROR, "Snapshot timer error.");
-            }
-        });
+    auto self(shared_from_this());
+    timer->start(periodSeconds, [this, self, callback = std::move(callback)]() {
+        if (forceShutdown) {
+            logger->log(Logger::LogLevel::WARNING, "ClientLogic is shutting down, aborting timer.");
+            return;
+        }
+        sendRandomNumber();
+        callback();
+    });
 }
 
 void ClientLogic::sendSumOfSquaresRequest()
 {
-    if (!transmitNumbers) return;
-    uint64_t data = randomNumberDistribution(randomNumberGenerator);
-    logger->info("Sending sum of squares request with number " + std::to_string(data));
-    networkClientProvider->sendSumOfSquaresRequest(data);
+    auto self(shared_from_this());
+    taskPoster([this,self]() {
+        if (!transmitNumbers) return;
+        uint64_t data = randomNumberDistribution(randomNumberGenerator);
+        logger->info("Sending sum of squares request with number " + std::to_string(data));
+        networkClientProvider->sendSumOfSquaresRequest(data);
+    });
 }
 
 void ClientLogic::sendRandomNumber()
@@ -86,7 +79,7 @@ void ClientLogic::onSumOfSquaresResponse(uint64_t sum) {
 void ClientLogic::onDisconnect()
 {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self]() {
+    taskPoster([this, self]() {
         logger->log(Logger::LogLevel::WARNING, "Disconnected from server. Will not send other numbers.");
         transmitNumbers = false;
     });
@@ -95,7 +88,7 @@ void ClientLogic::onDisconnect()
 void ClientLogic::onConnect()
 {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self]() {
+    taskPoster([this, self]() {
         transmitNumbers = true;
     });
 }
@@ -103,9 +96,9 @@ void ClientLogic::onConnect()
 void ClientLogic::stop()
 {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self]() {
+    taskPoster([this, self]() {
         networkClientProvider->stop();
-        timer.cancel();
+        timer->cancel();
         logger->info("ClientLogic stopped");
         forceShutdown = true;
     });

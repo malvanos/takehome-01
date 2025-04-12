@@ -13,31 +13,27 @@
 #include "ServerLogic.h"
 #include <chrono>
 #include <functional>
-#include "boost/asio.hpp"
-#include "boost/asio/error.hpp"
-#include "boost/system/error_code.hpp"
-#include "boost/system/detail/error_category.hpp"
 
 ServerLogic::ServerLogic(Dependencies&& dependencies)
     : logger(std::move(dependencies.logger))
     , waitingPeriodForDumps(dependencies.waitingPeriodForDumps)
-    , timer(dependencies.io_context)
-    , ioContext(dependencies.io_context)
+    , timer(std::move(dependencies.timer))
     , server(std::move(dependencies.server))
     , fileOperations(std::move(dependencies.fileOperations))
+    , taskPoster(std::move(dependencies.taskPoster))
 {
 }
 
 void ServerLogic::start()
 {
     logger->log(Logger::LogLevel::INFO, "Logic started");
-    start_snapshot_timer();
+    startSnapshotTimer();
     server->start(shared_from_this());
 }
 
 void ServerLogic::onNewNumber(uint64_t number) {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self, number]() {
+    taskPoster([this, self, number]() {
         logger->info("New number received: " + std::to_string(number));
         numbersContainer.insert(number);
         }
@@ -46,7 +42,7 @@ void ServerLogic::onNewNumber(uint64_t number) {
 
 void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self, number, whoAsked=std::move(whoAsked)]() {
+    taskPoster([this, self, number, whoAsked=std::move(whoAsked)]() {
             logger->info("Sum of squares requested: " + std::to_string(number));
             uint64_t sumOfSquares = number * number;
 
@@ -62,47 +58,37 @@ void ServerLogic::onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient
 void ServerLogic::stop()
 {
     auto self(shared_from_this());
-    boost::asio::post(ioContext, [this, self]() {
+    taskPoster([this, self]() {
         logger->log(Logger::LogLevel::INFO, "Logic stopped");
-        timer.cancel();
+        timer->cancel();
         fileOperations->stop();
         server->stop();
         forceShutdown = true;
      });
 }
 
-void ServerLogic::start_snapshot_timer() {
+void ServerLogic::startSnapshotTimer() {
     logger->log(Logger::LogLevel::INFO, "Snapshot timer started");
     auto self(shared_from_this());
-    take_snapshot_after(std::chrono::seconds(waitingPeriodForDumps), [this, self]() {
+    takeSnapShot_after(std::chrono::seconds(waitingPeriodForDumps), [this, self]() {
         logger->log(Logger::LogLevel::INFO, "Taking snapshot...");
-        start_snapshot_timer();
+        startSnapshotTimer();
     });
 }
 
-void ServerLogic::take_snapshot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback) {
+void ServerLogic::takeSnapShot_after(std::chrono::seconds periodSeconds, std::function<void(void)>&& callback) {
     if (periodSeconds <= std::chrono::seconds(0)) {
         callback();
         return;
     }
 
-    timer.expires_after(periodSeconds);
-    timer.async_wait(
-        [this, callback](const boost::system::error_code& ec) {
-            if (forceShutdown) {
-                logger->log(Logger::LogLevel::INFO, "Snapshot timer was aborted due to shutdown.");
-                return;
-            }
-            if (!ec) {
-                callback();
-            }
-            else if (ec == boost::asio::error::operation_aborted) {
-                logger->log(Logger::LogLevel::WARNING, "Snapshot timer was aborted.");
-            }
-            else {
-                logger->log(Logger::LogLevel::LOGERROR, "Snapshot timer error.");
-            }
-            fileOperations->writeFile(numbersContainer);
-        });
-
+    auto self(shared_from_this());
+    timer->start(periodSeconds, [this, self, callback]() {
+        if (forceShutdown) {
+            logger->log(Logger::LogLevel::INFO, "Snapshot timer was aborted due to shutdown.");
+            return;
+        }
+        fileOperations->writeFile(numbersContainer);
+        callback();
+    });
 }

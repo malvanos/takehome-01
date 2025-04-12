@@ -22,7 +22,8 @@
 #include <boost/asio.hpp>
 #include <thread>
 
-#include <conio.h> // For _kbhit() and _getch() on Windows
+#include <conio.h> // For _kbhit() and _getch()
+#include "../include/AsioTimer.h"
 
 static void runAsioContext(boost::asio::io_context& ctx) {
     ctx.run();
@@ -46,10 +47,15 @@ int main(int argc, char* argv[])
 
     // Logic
     boost::asio::io_context logicContext;
+    auto asioTaskPoster = [&logicContext](std::function<void()>&& task) {
+        boost::asio::post(logicContext, std::move(task));
+        };
+    auto timer = std::make_shared<AsioTimer>(logicContext);
     ClientLogic::Dependencies deps{
-        .ioContext = logicContext,
+        .timer = std::move(timer),
         .logger = logger,
-        .networkClientProvider = std::move(client)
+        .networkClientProvider = std::move(client),
+        .taskPoster = std::move(asioTaskPoster)
     };
     auto logic = std::make_shared<ClientLogic>(std::move(deps));
 

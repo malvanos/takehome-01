@@ -39,5 +39,11 @@
     <ClInclude Include="Protocol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsioTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

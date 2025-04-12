@@ -16,6 +16,7 @@
 #include "../logger/DuplicateLogger.h"
 #include "../serverLogic/ServerLogic.h"
 #include "../include/Logger.h"
+#include "../include/AsioTimer.h"
 #include "../NetworkServer/NetworkServer.h"
 #include "../FileOperations/SystemFileOperations.h"
 #include <string>
@@ -75,12 +76,17 @@ int main(int argc, char *argv[])
 
     // Logic
     boost::asio::io_context logicContext;
+    auto asioTaskPoster = [&logicContext](std::function<void()>&& task) {
+        boost::asio::post(logicContext, std::move(task));
+    };
+    auto timer = std::make_shared<AsioTimer>(logicContext);
     ServerLogic::Dependencies deps{
         .logger = logger,
         .waitingPeriodForDumps = 10,
-        .io_context = logicContext,
+        .timer = std::move(timer),
         .server = server,
-        .fileOperations = std::move(fileOperations)
+        .fileOperations = std::move(fileOperations),
+        .taskPoster = std::move(asioTaskPoster)
     };
     auto logic = std::make_shared<ServerLogic>(std::move(deps));
 

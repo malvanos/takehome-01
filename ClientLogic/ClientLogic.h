@@ -13,10 +13,10 @@
 
 #include <memory>
 #include <random>
-#include <boost/asio.hpp>
 #include "../include/Logger.h"
 #include "../include/NetworkClientProvider.h"
 #include "../include/NetworkClientObserver.h"
+#include "../include/Timer.h"
 
 class ClientLogic : 
     public NetworkClientObserver,
@@ -24,9 +24,10 @@ class ClientLogic :
 {
 public:
     struct Dependencies {
-        boost::asio::io_context& ioContext;
+        std::shared_ptr<Timer> timer;
         std::shared_ptr<Logger> logger;
         std::shared_ptr<NetworkClientProvider> networkClientProvider;
+        std::function<void(std::function<void()>)> taskPoster;
     };
 
     ClientLogic(Dependencies&& deps);
@@ -45,13 +46,13 @@ private:
 
     std::shared_ptr<Logger> logger;
     std::shared_ptr<NetworkClientProvider> networkClientProvider;
-    boost::asio::io_context& ioContext;
 
     std::mt19937 randomNumberGenerator;
     std::uniform_int_distribution<uint64_t> randomNumberDistribution{ 0, 1023 };
-    boost::asio::steady_timer timer;
+    std::shared_ptr<Timer> timer;
 
     const int waitingPeriodForSendinNumber = 1;
     bool forceShutdown = false;
     bool transmitNumbers = false;
+    std::function<void(std::function<void()>)> taskPoster;
 };
