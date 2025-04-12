@@ -32,7 +32,6 @@ class ServerLogic : public NetworkObserver, public std::enable_shared_from_this<
         };
 
         ServerLogic(Dependencies&& dependencies);
-        ~ServerLogic();
         void start();
         void onNewNumber(uint64_t number) override;
         void onAverageSquare(uint64_t number, std::shared_ptr<NumbersClient> whoAsked) override;

@@ -38,7 +38,6 @@ public:
     };
 
     Session(Depedencies deps);
-    ~Session();
     void start();
     void close();
     void send(uint64_t sumOfSquares) override;

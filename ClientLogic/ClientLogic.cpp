@@ -110,7 +110,3 @@ void ClientLogic::stop()
         forceShutdown = true;
     });
 }
-
-ClientLogic::~ClientLogic()
-{
-}

@@ -35,7 +35,6 @@ public:
     };
 
     NetworkServer(Dependencies&& deps);
-    ~NetworkServer() override;
     void start(std::shared_ptr<NetworkObserver> observer) override;
     void stop() override;
 

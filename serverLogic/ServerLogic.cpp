@@ -28,10 +28,6 @@ ServerLogic::ServerLogic(Dependencies&& dependencies)
 {
 }
 
-ServerLogic::~ServerLogic()
-{
-}
-
 void ServerLogic::start()
 {
     logger->log(Logger::LogLevel::INFO, "Logic started");

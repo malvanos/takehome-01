@@ -5,7 +5,6 @@
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 
-
 #include "pch.h"
 #include "FileLogger.h"
 #include <filesystem>
@@ -35,7 +34,6 @@ static std::string getCurrentTimestampForLoggerChrono() {
     ss << std::put_time(&tm_val, "%H:%M:%S") << "." << std::setfill('0') << std::setw(3) << milliseconds;
     return ss.str();
 }
-
 
 FileLogger::FileLogger()
 {

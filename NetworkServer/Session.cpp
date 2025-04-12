@@ -34,10 +34,6 @@ Session::Session(Depedencies deps)
 {
 }
 
-Session::~Session()
-{
-}
-
 void Session::start()
 {
     auto self(shared_from_this());

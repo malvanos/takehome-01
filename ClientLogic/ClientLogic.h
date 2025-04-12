@@ -30,7 +30,6 @@ public:
     };
 
     ClientLogic(Dependencies&& deps);
-    ~ClientLogic();
     void start();
     void sendSumOfSquaresRequest();
     void stop();

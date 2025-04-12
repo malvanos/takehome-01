@@ -20,10 +20,6 @@ NetworkServer::NetworkServer(Dependencies&& deps)
 {
 }
 
-NetworkServer::~NetworkServer()
-{
-}
-
 void NetworkServer::start(std::shared_ptr<NetworkObserver> observer)
 {
     auto self(shared_from_this());

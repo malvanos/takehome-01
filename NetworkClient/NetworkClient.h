@@ -29,7 +29,6 @@ public:
         std::shared_ptr<Logger> logger;
     };
     NetworkClient(Dependencies&& deps);
-    ~NetworkClient();
     void start(std::shared_ptr<NetworkClientObserver> networkClientProvider) override;
     void stop() override;
     void sendRandomNumber(uint64_t number) override;

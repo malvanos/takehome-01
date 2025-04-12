@@ -21,10 +21,6 @@ NetworkClient::NetworkClient(Dependencies&& deps)
 {
 }
 
-NetworkClient::~NetworkClient()
-{
-}
-
 void NetworkClient::start(std::shared_ptr<NetworkClientObserver> networkClientProvider)
 {
     auto self(shared_from_this());
