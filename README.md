@@ -19,11 +19,16 @@ with clients
 * When developing, you must use the Boost Asio library
 
 ## Notes
-* It will print on screen the progress of the test
-* Logs also in the file
-* Dumps the data to a file every N seconds (use -N to override)
-* Posts the tasks to the io context to avoid additional locks
-* Does not support reconnection in the client (not requested)
+* Displays the progress of the test on screen
+* Logs are also written to a file
+* Dumps data to a file every N seconds (use -N <value> to override)
+* Posts tasks to the I/O context to avoid additional locking
+* Client does not support reconnection (not required from the description)
+* Units tests are included only for logic
+
+## Design
+UML
+![UML Diagram.](/UML/design.drawio.svg)
 
 ## How to run
 
