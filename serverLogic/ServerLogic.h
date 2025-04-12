@@ -27,7 +27,7 @@ class ServerLogic : public NetworkObserver, public std::enable_shared_from_this<
             int waitingPeriodForDumps;
             std::shared_ptr<Timer> timer;
             std::shared_ptr<NetworkProvider> server;
-            std::unique_ptr<FileOperations> fileOperations;
+            std::shared_ptr<FileOperations> fileOperations;
             std::function<void(std::function<void()>)> taskPoster;
         };
 

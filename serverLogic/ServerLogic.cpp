@@ -26,9 +26,13 @@ ServerLogic::ServerLogic(Dependencies&& dependencies)
 
 void ServerLogic::start()
 {
-    logger->log(Logger::LogLevel::INFO, "Logic started");
-    startSnapshotTimer();
+    // We need to start the server
     server->start(shared_from_this());
+    auto self(shared_from_this());
+    taskPoster([this, self]() {
+        logger->log(Logger::LogLevel::INFO, "Logic started");
+        startSnapshotTimer();
+    });
 }
 
 void ServerLogic::onNewNumber(uint64_t number) {

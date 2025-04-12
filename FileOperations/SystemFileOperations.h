@@ -17,7 +17,7 @@
 #include <memory>
 #include "../include/Logger.h"
 
-class SystemFileOperations : public FileOperations {
+class SystemFileOperations : public FileOperations, public std::enable_shared_from_this< SystemFileOperations>{
 public:
     struct Dependencies {
         boost::asio::io_context& ioContext;

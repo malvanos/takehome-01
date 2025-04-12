@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         .logger = logger
     };
 
-    auto fileOperations = std::make_unique<SystemFileOperations>(std::move(filedeps));
+    auto fileOperations = std::make_shared<SystemFileOperations>(std::move(filedeps));
 
     // Network server
     boost::asio::io_context networkContext;
