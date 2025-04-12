@@ -31,15 +31,16 @@ static void runAsioContext(boost::asio::io_context& ctx) {
 int main(int argc, char* argv[])
 {
     // Logger
-    auto constoleLogger = std::make_unique<ConsoleLogger>();
-    auto fileLogger = std::make_unique<FileLogger>();
-    auto duplicateLogger = std::make_shared<DuplicateLogger>(std::move(constoleLogger), std::move(fileLogger));
+    auto logger = std::make_shared<DuplicateLogger>(
+        std::make_unique<ConsoleLogger>(),
+        std::make_unique<FileLogger>()
+    );
 
     // Network client
     boost::asio::io_context networkContext;
     NetworkClient::Dependencies NetworkClientDeps{
         .ioContext = networkContext,
-        .logger = duplicateLogger
+        .logger = logger
     };
     auto client = std::make_shared<NetworkClient>(std::move(NetworkClientDeps));
 
@@ -47,36 +48,36 @@ int main(int argc, char* argv[])
     boost::asio::io_context logicContext;
     ClientLogic::Dependencies deps{
         .ioContext = logicContext,
-        .logger = duplicateLogger,
+        .logger = logger,
         .networkClientProvider = std::move(client)
     };
     auto logic = std::make_shared<ClientLogic>(std::move(deps));
 
     logic->start();
 
-    std::thread thread1(runAsioContext, std::ref(networkContext));
-    std::thread thread2(runAsioContext, std::ref(logicContext));
+    std::thread networkThread(runAsioContext, std::ref(networkContext));
+    std::thread logicThread(runAsioContext, std::ref(logicContext));
 
-    duplicateLogger->info("Press ESC to close");
-    duplicateLogger->info("Press '1' to request sum of squares");
+    logger->info("Press ESC to close");
+    logger->info("Press '1' to request sum of squares");
     while (true) {
         if (_kbhit()) {
             int key = _getch();
             if (key == 27) { // ASCII code for Escape key
-                duplicateLogger->info("Received ESC. Closing.");
+                logger->info("Received ESC. Closing.");
                 logic->stop();
                 break;
             }
             else if (key == '1') {
-                duplicateLogger->info("Received '1'. Requesting sum of squares.");
+                logger->info("Received '1'. Requesting sum of squares.");
                 logic->sendSumOfSquaresRequest();
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    thread1.join();
-    thread2.join();
+    networkThread.join();
+    logicThread.join();
 
 }
 
