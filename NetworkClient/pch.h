@@ -7,5 +7,8 @@
 #ifndef PCH_H
 #define PCH_H
 
+#include <memory>
+#include <boost/asio.hpp>
+#include <deque>
 
 #endif //PCH_H

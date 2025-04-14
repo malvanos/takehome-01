@@ -7,5 +7,13 @@
 #ifndef PCH_H
 #define PCH_H
 
+#include <boost/asio.hpp>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+#include <functional>
+#include <utility>
+#include <stdexcept>
 
 #endif //PCH_H
