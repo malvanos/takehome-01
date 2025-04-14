@@ -41,12 +41,12 @@ UML
 
 ## License
 
-Copyright (c) 2025 Michael Alvanos Services LTD All rights reserved.
+Copyright (c) 2025 Michail Alvanos All rights reserved.
 
 This software is provided "as is" without any express or implied
 warranty. In no event will the authors be held liable for any damages
 arising from the use of this software.
 
-This software is the property of Michael Alvanos Services LTD.
+This software is the property of Michael Alvanos.
 Redistribution or reproduction, in whole or in part, is not permitted
 without explicit prior written permission from the owner.
